@@ -2,10 +2,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.tools import argparser
 import pandas as pd
-
+import config
 ##### youtube data api
 
-API_KEY = "AIzaSyBxI9rBVDEieKc0FmBJKdTJDtG4vWD_4Zc"    # API Key
+API_KEY = config.youtube_api_key    # API Key
 YOUTUBE_API_SERVICE_NAME="youtube"
 YOUTUBE_API_VERSION="v3"
 youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KEY)
