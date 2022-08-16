@@ -339,6 +339,65 @@ tfidf_script_matrix = pd.DataFrame(
 
 print(tfidf_matrix.values)
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud,STOPWORDS
+#pip install wordcloud
+from PIL import Image 
+import numpy as np
+
+
+# 2. 유사도 결과 단어로 ? - 행렬
+#tfidf_script_matrix.T.sum(axis=1) #용어당 빈도
+
+for i in range(len(tfidf_script_matrix)):
+    
+    fp = 'malgun'  #fp = 'Pretendard-Regular.otf' 예쁜 폰트,,
+    mask = np.array(Image.open('./resources/cloud.png')) #구름모양
+    wc = WordCloud(background_color="#1F1E1E", max_words=50, width=1000, height=800, font_path=fp ,
+               mask=mask ,colormap='Set3').generate_from_frequencies(tfidf_script_matrix.iloc[i, :])
+    
+    #wc = WordCloud(background_color="#1F1E1E", max_words=3, width=1000, height=800, font_path=fp ,
+    #           mask=mask ,colormap='Set3').generate_from_frequencies(tfidf_script_matrix.T.sum(axis=1))
+    
+    #test = tfidf_script_matrix.T(axis=1)
+    #test2 = collections.Counter(test).most_common(3)
+    #test2[0]
+    plt.figure(figsize=(32, 15))
+                   
+    plt.imshow(wc)
+    plt.axis('off')
+    plt.show()     
+    
+    wc.to_file("C:/server/wordcloud/" + videoId[i]+".png") #이미지 파일로 저장
+
+#로컬에 워드클라우드 이미지 저장
+
+def s3_put_object(s3, bucket, filepath, access_key):  # access_key가 아니라 s3버킷에 들어갈 파일명이다
+    '''
+    s3 bucket에 지정 파일 업로드
+    :param s3: 연결된 s3 객체(boto3 client)
+    :param bucket: 버킷명
+    :param filepath: 파일 위치
+    :param access_key: 저장 파일명
+    :return: 성공 시 True, 실패 시 False 반환
+    '''
+    try:
+        s3.upload_file(filepath, bucket, access_key)
+    except Exception as e:
+        print(e)
+        return False
+    return "SUCCESS"
+
+#@-------------워드클라우드 S3에 업로드 
+s3 = boto3.client('s3')
+#filepath = "C:/Noggro/" + videoId[2] +  ".png"
+for i in range(len(videoId)):
+    filepath = "C:/server/wordcloud/" + videoId[i] +  ".png"
+    s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath, videoId[i]+ "/" +videoId[i]+".png")
+
+#--안드로이드 cognito로 워드클라우드 띄우기 테스트 성공 
+
 
 #####--------- 영상별로 tf-idf값이 높은(중요도가 높은) 단어 추출
 # 주요 단어 3개 추출
