@@ -2,11 +2,12 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.tools import argparser
 import pandas as pd
-import config
+#import config
+import myconfig
 
 ##### youtube data api
 
-API_KEY =  config.youtube_api_key # API Key
+API_KEY =  myconfig.youtube_api_key # API Key
 YOUTUBE_API_SERVICE_NAME="youtube"
 YOUTUBE_API_VERSION="v3"
 youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KEY)
@@ -112,11 +113,18 @@ BUCKET_NAME = "mateityoutube"
 #key = videoId[2]+"/+ title[2]+".mp3
 
 
+#filepath =[]
+#key = []
+#for i in range(len(urls)):
+#    filepath.append("C:/Noggro/" + str(new_title[i][0]) + ".mp3")
+#    key.append(videoId[i]+"/"+ title[i]+".mp3")
+    
 filepath =[]
 key = []
 for i in range(len(urls)):
-    filepath.append("C:/Noggro/" + str(new_title[i][0]) + ".mp3")
-    key.append(videoId[i]+"/"+ title[i]+".mp3")
+    filepath.append("C:/Users/leesw/Desktop/MATEIT_SERVER/" + str(new_title[i][0]) + ".mp3")
+    key.append("youtube_datas/"+videoId[i]+"/"+ title[i]+".mp3")
+    
 
 #key 셍성할 파일 / 업로드할 파일명
 #key = 'V2OPlREZP5Y/본격 공개! 설현의 뷰티 노하우 ‘심쿵 꿀팁’ @본격연예 한밤 13회 20170228.mp3'
@@ -132,10 +140,10 @@ from __future__ import print_function
 import time
 import boto3
 
-AWS_ACCESS_KEY = config.AWS_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
-AWS_S3_BUCKET_REGION = config.AWS_S3_BUCKET_REGION
-AWS_S3_BUCKET_NAME = config.AWS_S3_BUCKET_NAME
+#AWS_ACCESS_KEY = config.AWS_ACCESS_KEY
+#AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
+#AWS_S3_BUCKET_REGION = config.AWS_S3_BUCKET_REGION
+#AWS_S3_BUCKET_NAME = config.AWS_S3_BUCKET_NAME
 
 transcribe = boto3.client('transcribe', 'us-east-2')
 
@@ -160,37 +168,37 @@ for i in range(len(videoId)):
         filenames.append(files)   #optional if you have more filefolders to got through.
 """        
 for i in range(len(videoId)):
-
-    job_name = videoId[i]
-    uri = "s3://mateityoutube/" + videoId[i]+ "/" + title[i]+".mp3"  #Tr에 필요한 영상 주소
-
+    job_name = videoId[i] + "dic"   #실행할 tr 이름 #dic반영할 경우 
+    uri = "s3://mateityoutube/youtube_datas/" + videoId[i]+ "/" + title[i]+".mp3"  #Tr에 필요한 영상 주소
     job_uri = uri
+#job_uri = "s3://mateityoutube/V2OPlREZP5Y/본격 공개! 설현의 뷰티 노하우 ‘심쿵 꿀팁’ @본격연예 한밤 13회 20170228.mp3"
 
     transcribe.start_transcription_job(
         TranscriptionJobName = job_name,
         Media = {
             'MediaFileUri': job_uri
-            },
+        },
         OutputBucketName = 'mateityoutube',
-        OutputKey = videoId[i] + "/", 
+        OutputKey = "youtube_datas/" +videoId[i]+ "/" , 
         LanguageCode = 'ko-KR', 
         Tags = [
             {
                 'Key':'color',    #??
                 'Value':'blue'
-                }
-            ] ,
+            }
+        ] ,
         Settings={
-            # 'VocabularyName': 'SHonly',
-                #    'ShowSpeakerLabels': True|False,
-                #    'MaxSpeakerLabels': 123,
-                #    'ChannelIdentification': True|False,
-                #    'ShowAlternatives': True|False,
-                #    'MaxAlternatives': 123,
-                #    'VocabularyFilterName': 'string',
-                #    'VocabularyFilterMethod': 'remove'|'mask'|'tag'
+            'VocabularyName': 'SHonly',
+            #딕셔너리 추가 반영
+        #    'ShowSpeakerLabels': True|False,
+        #    'MaxSpeakerLabels': 123,
+        #    'ChannelIdentification': True|False,
+        #    'ShowAlternatives': True|False,
+        #    'MaxAlternatives': 123,
+        #    'VocabularyFilterName': 'string',
+        #    'VocabularyFilterMethod': 'remove'|'mask'|'tag'
         },
-                  
+          
     )
     
 while True:
@@ -200,6 +208,12 @@ while True:
     print("Not ready yet...")
     time.sleep(5)
 print(status)
+
+#파일 업/다운로드를 위한 S3 커넥션
+AWS_ACCESS_KEY = "AKIA525DE7YW2DGHX3XQ"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_S3_BUCKET_REGION = "us-east-2"
+AWS_S3_BUCKET_NAME = "mateityoutube"
 
 
 # S3에 위치한 json 파일(STT TR 파일) 을 읽어오기( 다운로드 없이 바로 )
@@ -213,7 +227,7 @@ items = []
 stt = []
 
 for i in range(len(videoId)):
-    obj = s3.Object(AWS_S3_BUCKET_NAME, videoId[i]+"/"+ videoId[i] + ".json")
+    obj = s3.Object(AWS_S3_BUCKET_NAME, "youtube_datas/" + videoId[i]+"/"+ videoId[i] + "dic.json")
     #읽기...
     data = obj.get()['Body'].read().decode('utf-8') 
     items.append(data)
@@ -230,7 +244,7 @@ for i in range(len(items)):
 #@@----------------------df에 script 추가
 df['script']=stt
 
-df_to_csv = df.to_csv('./seolhyun_csv.csv', encoding='utf-8-sig')  # csv로 저장
+##df_to_csv = df.to_csv('./seolhyun_csv.csv', encoding='utf-8-sig')  # csv로 저장
 
 ##### tf-idf
 stop_words = [')','?','1','"(', '_', ')/','\n','.',',', '<','!','(','(', '??','..', '4', '|', '>', '?(', '"…', '#', '&', '・', "']",'.',' ','/',"'",'’','”','“','·', '[','!','\n','·','‘','"','\n ',']',':','…',')','(','-', 'nan','가','요','답변','...','을','수','에','질문','제','를','이','도',
@@ -347,8 +361,6 @@ from PIL import Image
 import numpy as np
 
 
-# 2. 유사도 결과 단어로 ? - 행렬
-#tfidf_script_matrix.T.sum(axis=1) #용어당 빈도
 
 for i in range(len(tfidf_script_matrix)):
     
@@ -369,8 +381,11 @@ for i in range(len(tfidf_script_matrix)):
     plt.axis('off')
     plt.show()     
     
-    wc.to_file("C:/server/wordcloud/" + videoId[i]+".png") #이미지 파일로 저장
-
+    wc.to_file(videoId[i]+".png")
+    
+    #wc.to_file("C:/server/wordcloud/" + videoId[i]+".png") #이미지 파일로 저장
+    #wc.to_file(videoId[0]+".png") #이미지 파일로 저장
+#float division by zero 오류 
 #로컬에 워드클라우드 이미지 저장
 
 def s3_put_object(s3, bucket, filepath, access_key):  # access_key가 아니라 s3버킷에 들어갈 파일명이다
@@ -393,8 +408,9 @@ def s3_put_object(s3, bucket, filepath, access_key):  # access_key가 아니라 
 s3 = boto3.client('s3')
 #filepath = "C:/Noggro/" + videoId[2] +  ".png"
 for i in range(len(videoId)):
-    filepath = "C:/server/wordcloud/" + videoId[i] +  ".png"
-    s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath, videoId[i]+ "/" +videoId[i]+".png")
+    filepath = "C:/Users/leesw/Desktop/MATEIT_SERVER/" + videoId[i] +  ".png"
+    #s3://mateityoutube/youtube_datas/776dS8Rmkhs/
+    s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath,"youtube_datas/"+ videoId[i]+ "/" +videoId[i]+".png")
 
 #--안드로이드 cognito로 워드클라우드 띄우기 테스트 성공 
 
@@ -438,9 +454,9 @@ keywords['tf-idf'] = values
 df['주요 단어(제목)'] = words
 df['단어의 중요도(tf-idf)'] = values
 
-df_to_csv = df.to_csv('./seolhyun_hanbam_tfidf.csv', encoding='utf-8-sig')  # csv로 저장
+##df_to_csv = df.to_csv('./seolhyun_hanbam_tfidf.csv', encoding='utf-8-sig')  # csv로 저장
 
-df = pd.read_csv('./seolhyun_csv2.csv')
+##df = pd.read_csv('./seolhyun_csv2.csv')
 
     
 # 결과 이미지
@@ -480,7 +496,10 @@ for i in range(len(stt_list)):
     start.append(stt_list[i][0])
     middle.append(stt_list[i][1])
     end.append(stt_list[i][2])
-    
+   
+#pip intall tensorflow
+#pip install torch
+#pip install sentence_transformers
 import tensorflow as tf
 import torch
 from sentence_transformers import util
@@ -511,10 +530,13 @@ def sbert_stt_rate(model, mylist, mylist2):
 
     return top_results   # 유사도만 리턴
 
+
+
+
 import joblib
 # 모델 불러오기
 my_model = joblib.load('models/myklue-roberta-base.pkl')
-
+# FileNotFoundError: [Errno 2] No such file or directory: 'models/myklue-roberta-base.pkl'
 
 #### (제목, 초반-중반)
 # 초반-중반 합치기 
