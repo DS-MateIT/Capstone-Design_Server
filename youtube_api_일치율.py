@@ -2,20 +2,11 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.tools import argparser
 import pandas as pd
-<<<<<<< HEAD
-#import config
 import myconfig
 
 ##### youtube data api
 
-API_KEY =  myconfig.youtube_api_key # API Key
-=======
-import myconfig 
-
-##### youtube data api
-
 API_KEY = myconfig.youtube_api_key # API Key
->>>>>>> d91b4c33a0ad0d6a8c71775f1940656f3345dc38
 YOUTUBE_API_SERVICE_NAME="youtube"
 YOUTUBE_API_VERSION="v3"
 youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KEY)
@@ -148,10 +139,10 @@ from __future__ import print_function
 import time
 import boto3
 
-#AWS_ACCESS_KEY = config.AWS_ACCESS_KEY
-#AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
-#AWS_S3_BUCKET_REGION = config.AWS_S3_BUCKET_REGION
-#AWS_S3_BUCKET_NAME = config.AWS_S3_BUCKET_NAME
+AWS_ACCESS_KEY = myconfig.AWS_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY = myconfig.AWS_SECRET_ACCESS_KEY
+AWS_S3_BUCKET_REGION = myconfig.AWS_S3_BUCKET_REGION
+AWS_S3_BUCKET_NAME = myconfig.AWS_S3_BUCKET_NAME
 
 transcribe = boto3.client('transcribe', 'us-east-2')
 
@@ -216,12 +207,6 @@ while True:
     print("Not ready yet...")
     time.sleep(5)
 print(status)
-
-#파일 업/다운로드를 위한 S3 커넥션
-AWS_ACCESS_KEY = "AKIA525DE7YW2DGHX3XQ"
-AWS_SECRET_ACCESS_KEY = "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"
-AWS_S3_BUCKET_REGION = "us-east-2"
-AWS_S3_BUCKET_NAME = "mateityoutube"
 
 
 # S3에 위치한 json 파일(STT TR 파일) 을 읽어오기( 다운로드 없이 바로 )
