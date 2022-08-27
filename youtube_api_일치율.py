@@ -12,9 +12,17 @@ YOUTUBE_API_VERSION="v3"
 youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KEY)
 
 
+# 검색어는 안드로이드에서 받아온 플라스크에서 가져온다
+def get_searchword(android_searchword):
+    search_word = android_searchword
+    return search_word
+
+search_word = get_searchword.search_word
+
 # 검색 결과 가져오기
 search_response = youtube.search().list(
-    q = "설현 한밤",   # 검색어 입력하기 (1개 이상 단어 가능) ex) 설현 한밤   
+    q = #"김연아 고우림 ",   # 검색어 입력하기 (1개 이상 단어 가능) ex) 설현 한밤   
+        search_word,
     order = "relevance",    # 관련성 순으로 보여줌
     part = "snippet",
     maxResults = 5
@@ -121,7 +129,7 @@ BUCKET_NAME = "mateityoutube"
 filepath =[]
 key = []
 for i in range(len(urls)):
-    filepath.append("C:/Users/leesw/Desktop/MATEIT_SERVER/" + str(new_title[i][0]) + ".mp3")
+    filepath.append("C:/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
     key.append("youtube_datas/"+videoId[i]+"/"+ title[i]+".mp3")
     
 
@@ -187,7 +195,7 @@ for i in range(len(videoId)):
             }
         ] ,
         Settings={
-            'VocabularyName': 'SHonly',
+        #    'VocabularyName': 'SHonly',
             #딕셔너리 추가 반영
         #    'ShowSpeakerLabels': True|False,
         #    'MaxSpeakerLabels': 123,
@@ -353,8 +361,8 @@ from wordcloud import WordCloud,STOPWORDS
 from PIL import Image 
 import numpy as np
 
-
-
+# tfidf값이 0인 경우 예외처리하기!
+# mysum = np.sum(tfidf_script_matrix[3, :], axis=1)
 for i in range(len(tfidf_script_matrix)):
     
     fp = 'malgun'  #fp = 'Pretendard-Regular.otf' 예쁜 폰트,,
@@ -718,11 +726,6 @@ def search_word_cal(word):
      # 일치율 계산 함수     인덱스 02 
     def calculation(title_count, thumb_count, desc_count, script_count, playtime):
         result = []
-        #print(thumb_count)
-        #scaler_ = MinMaxScaler()   # 값을 0~1사이로 스케일링
-        #scaled_title = scaler_.fit_transform(np.reshape(title_count, (5, -1)))
-        #scaled_desc = scaler_.fit_transform(np.reshape(desc_count, (5, -1)))
-        #scaled_script = scaler_.fit_transform(np.reshape(script_count, (5, -1)))
         
         log_title = np.log1p(title_count)
         log_desc = np.log1p(desc_count)
@@ -736,23 +739,8 @@ def search_word_cal(word):
 
             #time = playtime_second_list[i]/10
             #print(time)
-             
         
-            
-            # 검색어 순서 고려하는 방법
-            # 1) word2vec -> 단어를 벡터화해서 가까운 위치의 단어들을 유사하다고 판단함
-                # 근데 이 경우 데이터가 너무 조그매서 word2vec이 잘 학습을 못 함..
-            # 2) 위에처럼 바보 야매코드1, 2
-            # 3) sentence bert 결과를 가중치처럼 곱하기
-            
-
-            #result.append(((title_count[1]*30 + thumb_count[0]*10 + desc_count[1]*5 + script_count[1]*20) / time) / word_count)
-            #result.append(((scaled_title[i]*40 + thumb_count[0]*20 + scaled_desc[i]*20 + scaled_script[i]*40) / time) / word_count)
-            #result.append((((log_title[i]*15 + thumb_count[0]*5 + log_desc[i]*3 + log_script[i]*10)) / time) / word_count)
             result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[0]*5 + log_desc[i]*desc_weight[i])) / time) / word_count)
-            #result.append(((list_score[i]*(log_title[i]*30 + thumb_count[0]*10 + log_desc[i]*5 + log_script[i]*20)) / time) / word_count)
-            #100프로가 넘지 않기 위한 조치 ?? 가중치,,, 비율(비중) 조정 
-            ##좀 더 추가요소 넣고싶어요 ㅜㅜ
 
             print(sbert_score[i])
             
@@ -765,7 +753,7 @@ def search_word_cal(word):
         #result[i] *= 100
         result[i] = round(result[i],2)   # 소수점 둘째자리까지
         
-        # result값이 100을 넘을 경우 일단은 그냥 100으로..
+        # 일치율 값이 100을 넘을 경우에 대한 예외처리
         if result[i] > 100:
             result[i] = 100 
     return result
@@ -775,3 +763,15 @@ def search_word_cal(word):
 result_list = []
 for word in search_word:
     result_list.append((word, search_word_cal(word)))
+    
+        #print(thumb_count)
+        #scaler_ = MinMaxScaler()   # 값을 0~1사이로 스케일링
+        #scaled_title = scaler_.fit_transform(np.reshape(title_count, (5, -1)))
+        #scaled_desc = scaler_.fit_transform(np.reshape(desc_count, (5, -1)))
+        #scaled_script = scaler_.fit_transform(np.reshape(script_count, (5, -1)))
+            
+            # 검색어 순서 고려하는 방법
+            # 1) word2vec -> 단어를 벡터화해서 가까운 위치의 단어들을 유사하다고 판단함
+                # 근데 이 경우 데이터가 너무 조그매서 word2vec이 잘 학습을 못 함..
+            # 2) 위에처럼 바보 야매코드1, 2
+            # 3) sentence bert 결과를 가중치처럼 곱하기
