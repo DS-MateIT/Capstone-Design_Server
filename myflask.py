@@ -3,6 +3,8 @@ from flask import Flask, request, Response, jsonify
 import json
 import DBcount_test
 
+import youtube_api_일치율
+
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 
@@ -28,6 +30,7 @@ def postData2():
     
     
     
+    
 @app.route('/srch', methods=['GET','POST'])
 def srch():
     if request.method == 'POST' :
@@ -38,7 +41,7 @@ def srch():
         
         
         # 일치율 코드로 srch키워드 보내기
-        
+        youtube_api_일치율.get_searchword(post_srch)
         
         
         

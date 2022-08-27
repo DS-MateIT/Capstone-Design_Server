@@ -13,11 +13,14 @@ youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KE
 
 
 # 검색어는 안드로이드에서 받아온 플라스크에서 가져온다
+
 def get_searchword(android_searchword):
     search_word = android_searchword
     return search_word
 
 search_word = get_searchword.search_word
+
+print(search_word)
 
 # 검색 결과 가져오기
 search_response = youtube.search().list(
