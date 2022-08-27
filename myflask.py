@@ -3,8 +3,6 @@ from flask import Flask, request, Response, jsonify
 import json
 import DBcount_test
 
-import youtube_api_일치율
-
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 

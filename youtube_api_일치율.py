@@ -1,8 +1,12 @@
+from __future__ import print_function
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.tools import argparser
 import pandas as pd
 import myconfig
+
+
 
 ##### youtube data api
 
@@ -146,7 +150,7 @@ for i in range(len(filepath)):
     res = s3.upload_file(filepath[i], BUCKET_NAME, key[i])
     
 ##Python용 AWS SDK(Boto3) TR https://docs.aws.amazon.com/ko_kr/transcribe/latest/dg/tagging.html
-from __future__ import print_function
+#from __future__ import print_function
 import time
 import boto3
 
