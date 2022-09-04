@@ -5,3 +5,7 @@ myconfig.py
 models/
 
 __pycache__/
+
+# images, mp3
+wordcloud/
+pytube_mp3/

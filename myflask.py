@@ -1,12 +1,16 @@
 #안드로이드 앱에서 retrofit post로 서버에 받아오기
 from flask import Flask, request, Response, jsonify
+#from flask import request
 import json
 import DBcount_test
+#from youtube_api_일치율 import get_searchword as get_word
+#from youtube_api2 import get_searchword, get_youtube, get_pytube_mp3
+import youtube_api2
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 
-
+search_word = ""
 @app.route('/')
 def root():
     return 'test test'
@@ -33,18 +37,23 @@ def postData2():
 def srch():
     if request.method == 'POST' :
         post_srch = request.form['srchText']
-        
         # 디비로 보내기 
         DBcount_test.DBtable().Insert(post_srch,'1')
         
         
         # 일치율 코드로 srch키워드 보내기
-        youtube_api_일치율.get_searchword(post_srch)
+        #youtube_api_일치율.get_searchword(post_srch)
         
+        #### youtube_api코드 흐름 제어
+        # 함수로 안 만들고 youtube_api를 import해버리면
+        # 안드로이드 검색어를 가져오기도 전에 일치율 코드가 다 돌아가서
+        # youtube_api 모든 코드를 함수로 만들고
+        # 여기서 하나씩 부르는 게 좋은 것 같슴다
+        youtube_api2.get_searchword(post_srch)  
+        #youtube_api2.search_word_cal(post_srch)
+        youtube_api2.result_to_list()
         
-        
-        
-        print(post_srch)
+        #print(post_srch)
         return post_srch
         
     else :
@@ -130,9 +139,9 @@ def BMvideoId():
         print(data)
         return jsonify(data) 
     
-    
-    
 
   
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
+    #app.run(host='43.200.246.104')    # ec2 eip
+    #app.run()
