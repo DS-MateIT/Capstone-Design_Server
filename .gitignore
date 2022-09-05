@@ -9,4 +9,4 @@ __pycache__/
 # images, mp3
 wordcloud/
 # mp3
-.mp3
+*.mp3
