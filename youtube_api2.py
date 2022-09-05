@@ -117,7 +117,8 @@ def get_pytube_mp3(youtube, urls):
         print(yt.streams.filter(only_audio=True).all())
         
         #특정영상 다운로드
-        yt.streams.filter(only_audio=True).first().download('./pytube_mp3')
+        #yt.streams.filter(only_audio=True).first().download('./pytube_mp3')
+        yt.streams.filter(only_audio=True).first().download()
         print('success')
         
         # 확장자 변경
@@ -177,6 +178,7 @@ def s3_upload(new_title, urls):
     global df
     
     for i in range(len(urls)):
+        #filepath.append("C:/22_hg076_server/pytube_mp3/" + str(new_title[i][0]) + ".mp3")
         filepath.append("C:/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
         key.append("youtube_datas/"+df['videoId'][i]+"/"+ df['title'][i]+".mp3")
         
