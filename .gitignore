@@ -8,7 +8,5 @@ __pycache__/
 
 # images, mp3
 wordcloud/
-#pytube_mp3/
-
 # mp3
 .mp3
