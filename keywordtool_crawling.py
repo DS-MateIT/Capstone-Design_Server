@@ -27,14 +27,14 @@ def youtube_keyword(keywords):
     time.sleep(3)
     #select_youtube = driver.find_element_by_class_name('nav-item-search-youtube nav-item').find_element_tag_name('a').
     #input_element = driver.find_element_by_xpath('//input[@id="search-form-youtube-keyword-md"]')  # 검색창
-    input_element = wait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//input[@id="search-form-youtube-keyword-md"]')))
+    input_element = wait(driver, 50).until(EC.element_to_be_clickable((By.XPATH, '//input[@id="search-form-youtube-keyword-md"]')))
     input_element.send_keys(keywords)  # 키워드 입력
     input_element.click()
     
     time.sleep(3)
     
     #search_button = driver.find_element_by_class_name('search-form-youtube-submit')
-    search_button = wait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'search-form-youtube-submit')))
+    search_button = wait(driver, 50).until(EC.element_to_be_clickable((By.CLASS_NAME, 'search-form-youtube-submit')))
     search_button.click()
     time.sleep(3)
 
@@ -80,10 +80,17 @@ def youtube_keyword(keywords):
     
     return auto_keywords
 
+
+'''
 keywords = youtube_keyword('마라탕 먹방')
 
-keywords_list = ['설현', '김연아', '마라탕', '먹방 유튜버', '힙한 플레이리스트', '앵무새', '귀여운 앵무새',
-                 '스펀지 웃긴 편', '한소희', '간단한 요리']
+# keywords_list = ['설현', '김연아', '마라탕', '먹방 유튜버', '힙한 플레이리스트', '앵무새', '귀여운 앵무새',
+                 #'스펀지 웃긴 편', '한소희', '간단한 요리']
+
+keywords_list = ['설현', '김연아', '마라탕', '먹방 유튜버']
+    
+    
+    
 import pandas as pd
 result = pd.DataFrame(columns=['search_word', 'result_words'])
 
@@ -95,6 +102,8 @@ for i in range(len(keywords_list)):
     
 result['search_word'] = search_list
 result['result_words'] = result_list
+'''
+
 
 # keywords = youtube_keyword('설현')  ['설현 직캠', '설현 직캠 레전드', '설현 레전드']
 # keywords = youtube_keyword('김연아 결혼')  ['김연아 결혼식', '김연아 결혼 발표', '김연아 결혼 사주']

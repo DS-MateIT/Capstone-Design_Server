@@ -48,6 +48,16 @@ class DBtable:
         db.commit()
         db.close()
         
+    def Insert2(self, word):
+        
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        sql = '''insert into new_word2 (word) values(%s)'''
+        curs.execute(sql, word)
+        db.commit()
+        db.close()
+        
     def Update(self, word): 
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
@@ -85,9 +95,171 @@ class DBtable:
         db.commit()
         db.close()
         return ret
+    
+    
+    #테스트 ---------------------------------------------------------------------------------
+    #video_id DB
+    def Video_id_insert(self, video_id, stt1, stt2, stt3):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        sql = '''insert into Video (video_id, stt_word1,stt_word2,stt_word3) values(%s,%s,%s,%s)'''
+        curs.execute(sql,(video_id, stt1,stt2, stt3))
+        db.commit()
+        db.close()
+        
+        
+        
+    def Video_id_del(self, video_id):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+        
+        sql = "delete from Video where video_id=%s"
+        curs.execute(sql,video_id)
+        db.commit()
+        db.close()
+        
+    
+
+    ## 최근 본 영상
+    def Recent_Video(self):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select video_id from Video ORDER BY idx DESC LIMIT 5";
+             
+        curs.execute(sql)
+             
+        rows = curs.fetchall()
+
+        for e in rows:
+            temp = {'video_id':e[0]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        return ret        
+    
+    
+
+    # bookmark 테스트 - newschema new_bookmark
+    def Bookmark_insert(self,bookmark_no, video_id,user_id):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        sql = '''insert into Video (bookmark_no, video_id ,user_id) values(%d,%d,%d)'''
+        curs.execute(sql,(bookmark_no, video_id,user_id))
+        db.commit()
+        db.close()
+        
+        
+    def bookmark_Getresult(self):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select * from new_bookmark";
+             
+        curs.execute(sql)
+             
+        rows = curs.fetchall()
+
+        for e in rows:
+            temp = {'bookmark_no':e[0],'video_id':e[1], 'user_id':e[2]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        return ret
+    
+    
+    
+    
+    ## 연관검색어 
+    # 연관검색어 insert
+    def Relatedword_insert(self, srch_keyword, srch_craw1, srch_craw2, srch_craw3):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        sql = '''insert into new_word (srch_keyword, srch_craw1, srch_craw2, srch_craw3) values(%s,%s,%s,%s)'''
+        curs.execute(sql,(srch_keyword, srch_craw1, srch_craw2,  srch_craw3))
+        db.commit()
+        db.close()
+        
+    
+    # 연관검색어 select
+    def Relatedword_result(self):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select * from new_schema.new_word order by word_no desc LIMIT 3";
+             
+        curs.execute(sql)
+             
+        rows = curs.fetchall()
+
+        for e in rows:
+            temp = {'word_no':e[0],'srch_keyword':e[1], 'srch_craw1':e[2], 'srch_craw2':e[3], 'srch_craw3':e[4]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        return ret
+    
+    
+    ## user 
+    # user insert
+    def user_insert(self, user_email, user_password, user_age):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        
+        sql = '''insert into new_user (user_email, user_password, user_age) values(%s,%s,%s)'''
+        curs.execute(sql,(user_email, user_password, user_age))
+        db.commit()
+        db.close()
+        
+    ## user 
+    # user insert
+    def userinfo_insert(self, user_email, user_password, user_age):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        
+        sql = '''insert into User_info (user_email, user_password, user_age) values(%s,%s,%s)'''
+        curs.execute(sql,(user_email, user_password, user_age))
+        db.commit()
+        db.close()
+        
+    ## user 
+    # user insert
+    def user_id_get(self, user_email):
+        ret = []
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        #sql = "select user_id from testDB.User_info ORDER BY user_id DESC LIMIT 1"
+        sql = "select user_id from testDB.User_info where user_email=%s"
+        curs.execute(sql,user_email)
+        
+        rows = curs.fetchall()
+        
+        for e in rows:
+            temp = {'user_id':e[0]}
+            ret.append(temp)
+        
+        db.commit()
+        db.close()
+        return ret
+    
         
 if __name__ == '__main__':
-	#DBtable().Insert('앵무새','1')
+    #DBtable().Insert('앵무새','1')
     #DBtable().Update('앵무새')
     #DBtable().DelEmp('돌고래')
     #DBtable().MaxCount()

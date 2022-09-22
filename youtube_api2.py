@@ -179,7 +179,7 @@ def s3_upload(new_title, urls):
     
     for i in range(len(urls)):
         #filepath.append("C:/22_hg076_server/pytube_mp3/" + str(new_title[i][0]) + ".mp3")
-        filepath.append("C:/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
+        filepath.append("C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
         key.append("youtube_datas/"+df['videoId'][i]+"/"+ df['title'][i]+".mp3")
         
     
@@ -460,7 +460,7 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
         plt.axis('off')
         plt.show()     
         
-        wc.to_file("C:/22_hg076_server/wordcloud/"+df['videoId'][i]+".png")
+        wc.to_file("C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/wordcloud/"+df['videoId'][i]+".png")
         
         #wc.to_file("C:/server/wordcloud/" + videoId[i]+".png") #이미지 파일로 저장
         #wc.to_file(videoId[0]+".png") #이미지 파일로 저장
@@ -487,7 +487,7 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     s3 = boto3.client('s3')
     #filepath = "C:/Noggro/" + videoId[2] +  ".png"
     for i in range(len(df['videoId'])):
-        filepath = "C:/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
+        filepath = "C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
         #s3://mateityoutube/youtube_datas/776dS8Rmkhs/
         s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath,"youtube_datas/"+ df['videoId'][i]+ "/" +df['videoId'][i]+".png")
     

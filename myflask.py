@@ -1,16 +1,15 @@
 #안드로이드 앱에서 retrofit post로 서버에 받아오기
 from flask import Flask, request, Response, jsonify
-#from flask import request
 import json
 import DBcount_test
-#from youtube_api_일치율 import get_searchword as get_word
-#from youtube_api2 import get_searchword, get_youtube, get_pytube_mp3
-import youtube_api2
+import keywordtool_crawling
+
+
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 
-search_word = ""
+
 @app.route('/')
 def root():
     return 'test test'
@@ -32,34 +31,52 @@ def postData2():
     
     
     
-    
 @app.route('/srch', methods=['GET','POST'])
 def srch():
     if request.method == 'POST' :
         post_srch = request.form['srchText']
-        # 디비로 보내기 
-        DBcount_test.DBtable().Insert(post_srch,'1')
+       
+        
+        # 디비 - 검색어 디비로 보내기 
+        DBcount_test.DBtable().Insert2(post_srch)
         
         
-        # 일치율 코드로 srch키워드 보내기
-        #youtube_api_일치율.get_searchword(post_srch)
         
-        #### youtube_api코드 흐름 제어
-        # 함수로 안 만들고 youtube_api를 import해버리면
-        # 안드로이드 검색어를 가져오기도 전에 일치율 코드가 다 돌아가서
-        # youtube_api 모든 코드를 함수로 만들고
-        # 여기서 하나씩 부르는 게 좋은 것 같슴다
-        youtube_api2.get_searchword(post_srch)  
-        #youtube_api2.search_word_cal(post_srch)
-        youtube_api2.result_to_list()
+        # 일치율 코드에 srch키워드 적용하기
+        #print(get_searchword(post_srch))
         
-        #print(post_srch)
+        
+        ### 연관검색어 크롤링
+        keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        
+
+        print(keywords) #연관검색어 3개 추출 결과  # type : list
+        srch_craw1 = keywords[0] # print(srch_craw1)
+        srch_craw2 = keywords[1]
+        srch_craw3 = keywords[2]
+        
+        
+        ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
+        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
+        
+        
+        #지금 문제점 이름순으로 정렬되는 듯 함 : 내 검색 순 : 돈까스 개강 학식 초코바 / 테이블 출력 순 : 개강 돈까스 초코바 학식
+        #자동 인덱스 생성 -> 정렬완료함 
+    
+             
+        print(post_srch) #검색어 추출  
         return post_srch
         
-    else :
-        data = DBcount_test.DBtable().Getresult();
-        print(data)
-        return jsonify(data)    
+    else : # get했을 경우 : 연관검색어 db -> 안드로이드스튜디오
+       
+        data = DBcount_test.DBtable().Relatedword_result();
+        print(data) 
+        return jsonify(data)   
+
+
+
+
+
     
     
 #시청한 영상 video_id - DB에 넣기
@@ -138,10 +155,39 @@ def BMvideoId():
         data = DBcount_test.DBtable().bookmark_Getresult();
         print(data)
         return jsonify(data) 
-    
+ 
+# 회원가입 할때 User 정보 저장
+@app.route('/user', methods=['POST'])
+def user():
+    #global useremail
+    useremail = request.form['useremail']
+    userpw = request.form['userpw']
+    userbirth = request.form['userbirth']
 
-  
+    # 생년월일 그대로 받은거 성인/ 미성인 처리 여기서 해서 디비로 저장 ?  
+
+    # DB - user 정보 User_info 테이블로 보내기 (연속으로 회원가입해도 정상적으로 가입, 저장됨)
+    DBcount_test.DBtable().userinfo_insert(useremail, userpw, userbirth)
+    
+    userid = DBcount_test.DBtable().user_id_get(useremail)
+
+    
+    print("이메일 : " + useremail + " 비밀번호 : " + userpw + " 생일"+ userbirth)
+    
+    return userid
+    
+# 로그인 할때 User 정보 조회   
+@app.route('/user', methods=['GET'])
+def user2():
+    email = request.args.get('email')
+    userid = DBcount_test.DBtable().user_id_get(email)
+    jsonify(userid)
+    return jsonify(userid)
+        
+        
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
-    #app.run(host='43.200.246.104')    # ec2 eip
-    #app.run()
+    app.run(host='0.0.0.0') 
+    
+    #app.run(host='192.168.11.156') # 미정
+
+        
