@@ -120,16 +120,26 @@ class DBtable:
         
     
 
-    ## 최근 본 영상
-    def Recent_Video(self):
+    ## 최근 본 영상 insert
+    def Recent_Video_insert(self, user_email,video_id):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+                            
+        sql = '''insert into new_recentVideo (user_email,video_id) values(%s,%s)'''
+        curs.execute(sql,(user_email,video_id))
+        db.commit()
+        db.close()
+    
+    
+    ## 최근 본 영상 select 
+    def Recent_Video_Getresult(self,user_email):
         ret = []
-            
-        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
              
-        sql = "select video_id from Video ORDER BY idx DESC LIMIT 5";
-             
-        curs.execute(sql)
+        sql = "select video_id from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 5";
+               
+        curs.execute(sql,user_email)
              
         rows = curs.fetchall()
 
@@ -139,7 +149,8 @@ class DBtable:
             
         db.commit()
         db.close()
-        return ret        
+        return ret
+    
     
     
 

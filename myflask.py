@@ -154,19 +154,32 @@ def videoId():
         return jsonify(testdb)     #jsonify(data) 
 '''    
     
-#시청한 영상 video_id - id값 출력 확인 O
-@app.route('/videoid', methods=['GET','POST'])
+# 시청한 영상 video_id post - id값 출력 확인 O
+@app.route('/videoid', methods=['POST'])
 def videoId():
-    if request.method == 'POST' :
-        post_videoid = request.form['videoId']
+    video_id = request.form['videoId']
+    email = request.form['email']
         
-        #DB에 넣기 - stt wordcloud 세개 단어 추출 코드 합치기
-        print(post_videoid) 
-        return post_videoid
+    #최근 시청 DB에 insert - recent_id, user_email, video_id
+    DBcount_test.DBtable().Recent_Video_insert(email,video_id)
+    
+    print(video_id) 
+    return video_id
         
-        
-    else : 
-        return post_videoid
+
+# 최근 시청한 영상 get 
+@app.route('/videoid', methods=['GET'])
+def videoIdget():
+    email = request.args.get('email')
+    video_id = DBcount_test.DBtable().Recent_Video_Getresult(email) 
+    
+    
+    jsonify(video_id)
+    print(video_id)
+    return jsonify(video_id)
+    
+
+
  
 
 ## 북마크
