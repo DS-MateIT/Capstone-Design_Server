@@ -6,6 +6,7 @@ from oauth2client.tools import argparser
 import pandas as pd
 import myconfig
 
+
 # 생각해볼 점
 # 1. 워드클라우드 zero divde오류 -> tfidf_script_matrix 값이 0이어서 나는 오류 해결
 # 2. 안드로이드 검색 결과에 쇼츠가 나오면 오류 -> 이거 youtube data api로 쇼츠 가져오는 방법을 모르겠음
@@ -175,11 +176,12 @@ def s3_upload(new_title, urls):
         
     filepath =[]
     key = []
+    uploaded_list = []
     global df
     
     for i in range(len(urls)):
         #filepath.append("C:/22_hg076_server/pytube_mp3/" + str(new_title[i][0]) + ".mp3")
-        filepath.append("C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
+        filepath.append("C:/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
         key.append("youtube_datas/"+df['videoId'][i]+"/"+ df['title'][i]+".mp3")
         
     
@@ -188,9 +190,21 @@ def s3_upload(new_title, urls):
     
     s3 = boto3.client('s3')
     
+    ### s3 버킷에서 videoid 읽어오기 - 중복 업로드 방지 ###
+    """obj_list = s3.list_objects(Bucket=BUCKET_NAME, Prefix='youtube_datas/')
+    contents_list = obj_list['Contents']
+    
+    for content in contents_list:
+        uploaded_youtube = content['Key'].split('/')[1]    # videoId 가져옴
+        #uploaded_youtube = content['Key']
+        uploaded_list.append(uploaded_youtube)
+    uploaded_list = list(set(uploaded_list))
+    print("업로드된 영상 videoId")
+    print(uploaded_list)
+    """
     for i in range(len(filepath)):
-        #res = s3.upload_file(filepath[i], BUCKET_NAME, key[i])   #
-        res = s3.upload_file(filepath[i], BUCKET_NAME, key[i])
+        res = s3.upload_file(filepath[i], BUCKET_NAME, key[i])   #
+
     ######
     #aws_transcribe()
         
@@ -220,6 +234,21 @@ def aws_transcribe():
         job_uri = uri
     #job_uri = "s3://mateityoutube/V2OPlREZP5Y/본격 공개! 설현의 뷰티 노하우 ‘심쿵 꿀팁’ @본격연예 한밤 13회 20170228.mp3"
     
+        """# tr job목록 가져오기
+        response = transcribe.list_transcription_jobs(
+            #Status='QUEUED'|'IN_PROGRESS'|'FAILED'|'COMPLETED',
+            Status = 'COMPLETED',
+            JobNameContains=job_name,
+            #NextToken='string',
+            MaxResults=5
+        )
+        
+        # job_name이라는 이름의 job이 존재하면 해당 영상은 이미 tr을 돌린 것이므로 다음으로 넘어감
+        #if len(response) == 1:
+        #    continue
+        
+        print(response)
+        """
         transcribe.start_transcription_job(
             TranscriptionJobName = job_name,
             Media = {
@@ -278,10 +307,16 @@ def get_stt():
     global df
     for i in range(len(df['videoId'])):
         obj = s3.Object(AWS_S3_BUCKET_NAME, "youtube_datas/" + df['videoId'][i]+"/"+ df['videoId'][i] + "dic.json")
+
+        #obj = s3.get_object(AWS_S3_BUCKET_NAME, "youtube_datas/" + df['videoId'][i]+"/"+ df['videoId'][i] + "dic.json")
         #읽기...
-        data = obj.get()['Body'].read().decode('utf-8') 
+        data = obj.get()['Body'].read().decode('utf-8')  ## 쇼츠가 아닌데도 여기서 자꾸 오류가 남..
+        #data = obj['Body'].read().decode('utf-8') 
+
         items.append(data)
-    print(items)
+    print("~items 길이~")
+    print(len(items))
+    #print(items)
         
     #obj = s3.Object(AWS_S3_BUCKET_NAME, videoId[4]+"/"+ videoId[4] + ".json")
     #data = obj.get()['Body'].read().decode('utf-8') 
@@ -290,7 +325,9 @@ def get_stt():
     for i in range(len(items)):
         items[i] = json.loads(items[i])
         stt.append(items[i]['results']['transcripts'][0]['transcript'])
-    print(stt)
+    
+    print("~stt 길이~")
+    print(len(stt))
     
     
     print("get_stt() 끝!")
@@ -443,6 +480,12 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     global df
     for i in range(len(tfidf_script_matrix)):
         
+        # 현재 tfidf 행렬 값이 모두 0이면 워드클라우드 오류가 발생하므로 다음 반복으로...
+        """if sum(tfidf_script_matrix) == 0: 오류나네...
+            print("!주요 키워드가 없습니다!")
+            break
+        """
+        
         fp = 'malgun'  #fp = 'Pretendard-Regular.otf' 예쁜 폰트,,
         mask = np.array(Image.open('./resources/cloud.png')) #구름모양
         wc = WordCloud(background_color="#1F1E1E", max_words=50, width=1000, height=800, font_path=fp ,
@@ -460,7 +503,7 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
         plt.axis('off')
         plt.show()     
         
-        wc.to_file("C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/wordcloud/"+df['videoId'][i]+".png")
+        wc.to_file("C:/22_hg076_server/wordcloud/"+df['videoId'][i]+".png")
         
         #wc.to_file("C:/server/wordcloud/" + videoId[i]+".png") #이미지 파일로 저장
         #wc.to_file(videoId[0]+".png") #이미지 파일로 저장
@@ -487,7 +530,7 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     s3 = boto3.client('s3')
     #filepath = "C:/Noggro/" + videoId[2] +  ".png"
     for i in range(len(df['videoId'])):
-        filepath = "C:/Users/ertbn/OneDrive/바탕 화면/mateit/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
+        filepath = "C:/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
         #s3://mateityoutube/youtube_datas/776dS8Rmkhs/
         s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath,"youtube_datas/"+ df['videoId'][i]+ "/" +df['videoId'][i]+".png")
     
@@ -659,7 +702,8 @@ def sbert_to_df(start, middle, end):
         list_score.append(float(score))
         
     title_stt_df = pd.DataFrame(list(zip(id_list, title_list, start_middle, list_score)), columns=['videoId', 'title', 'stt(start-middle)', 'score'])
-
+    print("!! title_stt_df!!")
+    print(title_stt_df)
     return title_stt_df
     #global search_word
     #search_word_cal(search_word)
@@ -736,6 +780,7 @@ def search_word_cal(word):
     thumb_count = [int(sum((th.count(search_word[j])) for j in range(word_count))) for th in thumb] #0
     desc_count = [int(sum((desc.count(search_word[j])) for j in range(word_count))) for desc in desc_token]
     script_count = [int(sum((script.count(search_word[j])) for j in range(word_count))) for script in script_token]
+    
     
     # 검색어 순서에 따라 가중치주기 2
     # 바보야매코드
@@ -866,7 +911,7 @@ def search_word_cal(word):
         
             result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[0]*5 + log_desc[i]*desc_weight[i])) / time) / word_count)
 
-            print(sbert_score[i])
+            #print(sbert_score[i])
             
         return result
 
@@ -882,18 +927,23 @@ def search_word_cal(word):
             result[i] = 100 
     
     print("!search_word_cal 끝!")
-    return result
+    return result, df['videoId']
     #print(result) 
 
 
 # result_to_list(): 계산한 일치율을 리스트로
-def result_to_list():
+"""def result_to_list():
     print("!result_to_list 시작!")
     result_list = []
     #for word in search_word:
     global search_word
-    result_list.append((search_word, search_word_cal(search_word)))
+    result_list.append(search_word_cal(search_word))
     
+    # 2차원 -> 1차원으로
+    result_list = sum(result_list, [])
+    
+    print(len(result_list))
     for i in range(len(result_list)):
         print(result_list[i])
     print("!result_to_list 끝!")
+    return result_list"""

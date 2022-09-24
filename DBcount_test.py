@@ -257,6 +257,35 @@ class DBtable:
         db.close()
         return ret
     
+    def rate_insert(self,  srch_word, video_id, rate):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        
+        sql = '''insert into Video_rate (srch_word, video_id, rate) values(%s,%s,%s)'''
+        curs.execute(sql,(srch_word, video_id, rate))
+        db.commit()
+        db.close()
+        
+    def rate_get(self, srch_word, video_id):
+        ret = []
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+            
+        #sql = "select user_id from testDB.User_info ORDER BY user_id DESC LIMIT 1"
+        sql = "select rate from Video_rate where srch_word=%s and video_id=%s"
+        curs.execute(sql, (srch_word, video_id))
+        
+        rows = curs.fetchall()
+        
+        for e in rows:
+            temp = {'rate':e[0]}
+            ret.append(temp)
+        
+        db.commit()
+        db.close()
+        return ret
+    
         
 if __name__ == '__main__':
     #DBtable().Insert('앵무새','1')

@@ -3,12 +3,14 @@ from flask import Flask, request, Response, jsonify
 import json
 import DBcount_test
 import keywordtool_crawling
-
+import youtube_api2
+import pymysql
 
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 
+search_word = ""
 
 @app.route('/')
 def root():
@@ -36,7 +38,6 @@ def srch():
     if request.method == 'POST' :
         post_srch = request.form['srchText']
        
-        
         # 디비 - 검색어 디비로 보내기 
         DBcount_test.DBtable().Insert2(post_srch)
         
@@ -55,23 +56,56 @@ def srch():
         srch_craw2 = keywords[1]
         srch_craw3 = keywords[2]
         
+        # 디비로 보내기 
+        #DBcount_test.DBtable().Insert(post_srch,'1')
+            
+            
+        # 일치율 코드로 srch키워드 보내기
+        #youtube_api_일치율.get_searchword(post_srch)
+            
+        #### youtube_api코드 흐름 제어
+
+        """word = "설현 인터뷰"
+        youtube_api2.get_searchword(word)  
+        result, video_id = youtube_api2.search_word_cal(word)
+
+        #result = youtube_api2.result_to_list()
+        print("######## 일치율 타입 ##########")
+        result = list(map(float, result))      # float로 변환
+        print(type(word))
+        
+        video_id = list(video_id)
+        #global rate_result
+        #for i in range(len(result)):
+            #rate_result.append(result[i])
+        
+        ## db Video_rate에 일치율 저장
+        DBcount_test.DBtable().rate_insert(word, video_id[0], result[0])
+        DBcount_test.DBtable().rate_insert(word, video_id[1], result[1])
+        DBcount_test.DBtable().rate_insert(word, video_id[2], result[2])
+        DBcount_test.DBtable().rate_insert(word, video_id[3], result[3])
+        DBcount_test.DBtable().rate_insert(word, video_id[4], result[4])
+        """
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
         DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
         
+       
         
         #지금 문제점 이름순으로 정렬되는 듯 함 : 내 검색 순 : 돈까스 개강 학식 초코바 / 테이블 출력 순 : 개강 돈까스 초코바 학식
         #자동 인덱스 생성 -> 정렬완료함 
-    
-             
-        print(post_srch) #검색어 추출  
         return post_srch
+
+
         
     else : # get했을 경우 : 연관검색어 db -> 안드로이드스튜디오
        
         data = DBcount_test.DBtable().Relatedword_result();
         print(data) 
-        return jsonify(data)   
+        # db에 저장된 일치율 불러온다
+        
+        #return jsonify(ret)
+        return jsonify(data)
 
 
 
@@ -184,6 +218,41 @@ def user2():
     jsonify(userid)
     return jsonify(userid)
         
+### 일치율 가져오기
+"""@app.route('/srch-rate', methods=['POST'])
+def post_srch():
+    #global result_rate
+    
+    
+
+        #result_rate = json.dumps(result_rate, ensure_ascii=False).encode('utf8')
+        #Response(result_rate, content_type='application/json; charset=utf-8')
+        
+        #return jsonify(Response)
+        #print(post_srch)
+    
+    return jsonify(result_rate)
+        
+    """
+@app.route('/srch-rate', methods=['GET'])
+def get_srch():
+    #data = DBcount_test.DBtable().Getresult();
+    #print(data)
+
+    # db에 저장된 일치율 불러온다
+    search_keyword= request.args.get('srch_word')
+    video_id = request.args.get('video_id')
+    
+    rate = DBcount_test.DBtable().rate_get(search_keyword, video_id)
+    
+
+    #return jsonify(ret)
+
+    #return "GET"
+    #return rate[0]
+    #print(rate[0]['result'])
+    
+    return jsonify(rate)
         
 if __name__ == '__main__':
     app.run(host='0.0.0.0') 
