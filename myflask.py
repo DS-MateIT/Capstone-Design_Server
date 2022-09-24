@@ -169,26 +169,39 @@ def videoId():
         return post_videoid
  
 
-
-
-#북마크용 video_id 받기 - 버튼 클릭시 id값 출력 확인 O
-@app.route('/BMvideoid', methods=['GET','POST'])
+## 북마크
+#useremail video_id post
+@app.route('/BMvideoid', methods=['POST'])
 def BMvideoId():
-    if request.method == 'POST' :
-        bm_videoid = request.form['videoId']
-        print(bm_videoid) 
+    user_email = request.form['useremail']
+    videoid = request.form['videoid']
+    print(user_email, videoid) 
+    
+    data = DBcount_test.DBtable().Bookmark_select(user_email, videoid)
+    print(data[0]['success'])
+    
+    # 북마크 테이블에 기록이 없으면
+    if data[0]['success'] == 0 :
+        #Bookmark_info 테이블에 넣기
+        DBcount_test.DBtable().Bookmark_insert(user_email, videoid)
+        return videoid
+    # 북마크 테이블에 기록이 있으면
+    elif data[0]['success'] == 1 : 
+        #Bookmark_info 테이블에서 삭
+        DBcount_test.DBtable().Bookmark_del(user_email, videoid)
+        return videoid
+    
+    return videoid
         
-        #test 테이블에 넣기
-        DBcount_test.DBtable.Insert('1',bm_videoid,'user1')
-        
-        
-        return bm_videoid
-        
-        
-    else : 
-        data = DBcount_test.DBtable().bookmark_Getresult();
-        print(data)
-        return jsonify(data) 
+    
+## 북마크
+#useremail video_id get    
+@app.route('/BMvideoid', methods=['GET'])
+def BMvideoId2():
+    data = DBcount_test.DBtable().bookmark_Getresult();
+    print(data)
+    return jsonify(data) 
+
  
 # 회원가입 할때 User 정보 저장
 @app.route('/user', methods=['POST'])

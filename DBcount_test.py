@@ -97,7 +97,6 @@ class DBtable:
         return ret
     
     
-    #테스트 ---------------------------------------------------------------------------------
     #video_id DB
     def Video_id_insert(self, video_id, stt1, stt2, stt3):
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
@@ -144,21 +143,51 @@ class DBtable:
     
     
 
-    # bookmark 테스트 - newschema new_bookmark
-    def Bookmark_insert(self,bookmark_no, video_id,user_id):
-        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+    ## bookmark - testDB Bookmark_info
+    def Bookmark_insert(self, user_email, videoid):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
             
-        sql = '''insert into Video (bookmark_no, video_id ,user_id) values(%d,%d,%d)'''
-        curs.execute(sql,(bookmark_no, video_id,user_id))
+        sql = '''insert into Bookmark_info (user_email, videoid) values(%s,%s)'''
+        curs.execute(sql,(user_email,videoid))
         db.commit()
         db.close()
         
+    ## bookmark - testDB Bookmark_info
+    def Bookmark_select(self, user_email, videoid):
+        ret = []
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+        
+        sql = '''select EXISTS (select * from testDB.Bookmark_info where user_email=%s AND videoid=%s limit 1) as success;'''
+        curs.execute(sql,(user_email,videoid))
+        
+        rows = curs.fetchall()
+        
+        for e in rows:
+            temp = {'success':e[0]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        
+        return ret
+        
+        
+    ## bookmark - testDB Bookmark_info    
+    def Bookmark_del(self, user_email, videoid):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+        
+        sql = "delete from testDB.Bookmark_info where user_email=%s AND videoid=%s"
+        curs.execute(sql,(user_email, videoid))
+        db.commit()
+        db.close()
         
     def bookmark_Getresult(self):
         ret = []
             
-        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
              
         sql = "select * from new_bookmark";
