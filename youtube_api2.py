@@ -89,7 +89,7 @@ def get_youtube():
     df['script'] = pd.Series()    # 빈 script컬럼 만들어둠
     
     urls = []
-    for i in range(5):
+    for i in range(len(df)):
         urls.append("https://www.youtube.com/watch?v="+str(df['videoId'][i]))
     
     print(df)
@@ -212,6 +212,7 @@ def s3_upload(new_title, urls):
 #from __future__ import print_function
 import time
 import boto3
+from urllib import request
 
 AWS_ACCESS_KEY = myconfig.AWS_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY = myconfig.AWS_SECRET_ACCESS_KEY
@@ -225,7 +226,9 @@ def aws_transcribe():
     
     # conflict예외 발생할 때: transcribe.delete_transcription_job(TranscriptionJobName=job_name)
     # transcribe.delete_transcription_job(TranscriptionJobName=videoId[4])
-    
+    items = []
+    #stt = []
+    global stt
 
     global df
     for i in range(len(df['videoId'])):
@@ -234,21 +237,7 @@ def aws_transcribe():
         job_uri = uri
     #job_uri = "s3://mateityoutube/V2OPlREZP5Y/본격 공개! 설현의 뷰티 노하우 ‘심쿵 꿀팁’ @본격연예 한밤 13회 20170228.mp3"
     
-        """# tr job목록 가져오기
-        response = transcribe.list_transcription_jobs(
-            #Status='QUEUED'|'IN_PROGRESS'|'FAILED'|'COMPLETED',
-            Status = 'COMPLETED',
-            JobNameContains=job_name,
-            #NextToken='string',
-            MaxResults=5
-        )
-        
-        # job_name이라는 이름의 job이 존재하면 해당 영상은 이미 tr을 돌린 것이므로 다음으로 넘어감
-        #if len(response) == 1:
-        #    continue
-        
-        print(response)
-        """
+
         transcribe.start_transcription_job(
             TranscriptionJobName = job_name,
             Media = {
@@ -264,7 +253,7 @@ def aws_transcribe():
                 }
             ] ,
             Settings={
-                'VocabularyName': 'SHonly',
+                #'VocabularyName': 'SHonly',
                 #딕셔너리 추가 반영
             #    'ShowSpeakerLabels': True|False,
             #    'MaxSpeakerLabels': 123,
@@ -277,14 +266,30 @@ def aws_transcribe():
               
         )
         
-    while True:
-        status = transcribe.get_transcription_job(TranscriptionJobName = job_name)
-        if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
-            break
-        print("Not ready yet...")
-        time.sleep(5)
-    print(status)
+        while True:
+            status = transcribe.get_transcription_job(TranscriptionJobName = job_name)
+            if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
+                break
+            print("Not ready yet...")
+            time.sleep(5)
+        print(status)
+
+    return "TR Upload SUCCESS"
     
+    # Transcribe 결과가 저장된 웹주소
+    """save_json_uri = status['TranscriptionJob']['Transcript'][uri]   
+            
+    # 웹서버 결과 파이썬으로 불러오기
+    load = request.urlopen(save_json_uri)
+    confirm = load.status
+    rst = load.read().decode('utf-8')
+    print(rst)
+    items.append(rst)
+    
+    for i in range(len(items)):
+        items[i] = json.loads(items[i])
+        stt.append(items[i]['results']['transcripts'][0]['transcript'])
+    """
     ######
     #get_stt()
     
@@ -299,7 +304,8 @@ import boto3
 def get_stt():   
     s3 = boto3.resource('s3', 'us-east-2')
     #s3://mateityoutube/2DEDNW5Jq4Q/2DEDNW5Jq4Q.json
-    
+    # Transcribe 결과가 저장된 웹주소
+
     items = []
     #stt = []
     global stt
@@ -328,6 +334,7 @@ def get_stt():
     
     print("~stt 길이~")
     print(len(stt))
+    print(stt)
     
     
     print("get_stt() 끝!")
@@ -349,7 +356,10 @@ def stt_tfidf():
     
     global df
     global stt
-    df['script']=stt
+    for i in range(len(stt)):
+        df.iloc[i, 4]=stt[i]
+    print("~df['script']~")
+    print(df['script'])
     
     ##df_to_csv = df.to_csv('./seolhyun_csv.csv', encoding='utf-8-sig')  # csv로 저장
     
@@ -480,11 +490,12 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     global df
     for i in range(len(tfidf_script_matrix)):
         
-        # 현재 tfidf 행렬 값이 모두 0이면 워드클라우드 오류가 발생하므로 다음 반복으로...
-        """if sum(tfidf_script_matrix) == 0: 오류나네...
+        print(tfidf_script_matrix.iloc[i, :].sum())
+        # 현재 tfidf 행렬 값이 모두 0이면 워드클라우드 오류가 발생하므로
+        if tfidf_script_matrix.iloc[i, :].sum() == 0.0:
             print("!주요 키워드가 없습니다!")
-            break
-        """
+            continue
+        
         
         fp = 'malgun'  #fp = 'Pretendard-Regular.otf' 예쁜 폰트,,
         mask = np.array(Image.open('./resources/cloud.png')) #구름모양
@@ -530,6 +541,9 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     s3 = boto3.client('s3')
     #filepath = "C:/Noggro/" + videoId[2] +  ".png"
     for i in range(len(df['videoId'])):
+        if tfidf_script_matrix.iloc[i, :].sum() == 0.0:
+            print("!주요 키워드가 없습니다!")
+            continue
         filepath = "C:/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
         #s3://mateityoutube/youtube_datas/776dS8Rmkhs/
         s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath,"youtube_datas/"+ df['videoId'][i]+ "/" +df['videoId'][i]+".png")
@@ -613,12 +627,16 @@ def stt_split(keywords):
     end = []
     
     for i in range(len(stt_list)):
-        length = len(stt_list[i])//3
-        stt_list[i] = list_chunk(stt_list[i], length)
-        
-        start.append(stt_list[i][0])
-        middle.append(stt_list[i][1])
-        end.append(stt_list[i][2])
+        if len(stt_list[i])//3 == 0:
+            print("!stt가 없습니다!")
+            break
+        else:
+            length = len(stt_list[i])//3
+            stt_list[i] = list_chunk(stt_list[i], length)
+            
+            start.append(stt_list[i][0])
+            middle.append(stt_list[i][1])
+            end.append(stt_list[i][2])
         
     ######
     #sbert_to_df(start, middle, end)
@@ -677,20 +695,26 @@ def sbert_to_df(start, middle, end):
     #start, middle, end = stt_split()
     #### (제목, 초반-중반)
     # 초반-중반 합치기 
-    stt_start_middle = []
+    """stt_start_middle = []
     for i in range(len(start)):
         stt_start_middle.append('\n'.join(start[i][:3])+'\n'.join(middle[i][:3]))
     
     top_results = []
     #for i in range(len(stt_start_middle)):
-    #    top_results.append(sbert_stt_rate(my_model, title, stt_start_middle[i]))
+    #    top_results.append(sbert_stt_rate(my_model, title, stt_start_middle[i]))"""
     global df
     titles = list(df['title'])
-    top_results = sbert_stt_rate(my_model, titles, stt_start_middle)
     
+    middle_list = []
+    for i in range(len(middle)):
+        middle_list.append('\n'.join(middle[i][:3]))
+        
+    for i in range(len(middle_list)):
+        top_results = sbert_stt_rate(my_model, titles, middle_list[i])
+    print(top_results)
     id_list = []
     title_list = []
-    start_middle = []
+    new_middle_list = []
     list_score = []
     
     #for i in range(len(stt_start_middle)):
@@ -698,12 +722,12 @@ def sbert_to_df(start, middle, end):
     for j, (score, idx) in enumerate(zip(top_results[0], top_results[1])):
         id_list.append(list(df['videoId'])[idx])
         title_list.append(list(df['title'])[idx])
-        start_middle.append(stt_start_middle[idx])
+        new_middle_list.append(middle_list[idx])
         list_score.append(float(score))
         
-    title_stt_df = pd.DataFrame(list(zip(id_list, title_list, start_middle, list_score)), columns=['videoId', 'title', 'stt(start-middle)', 'score'])
+    title_stt_df = pd.DataFrame(list(zip(id_list, title_list, new_middle_list, list_score)), columns=['videoId', 'title', 'stt(middle)', 'score'])
     print("!! title_stt_df!!")
-    print(title_stt_df)
+    print(title_stt_df.iloc[:, 1:])
     return title_stt_df
     #global search_word
     #search_word_cal(search_word)
@@ -727,20 +751,22 @@ from sklearn.preprocessing import MinMaxScaler
 from gensim.models import Word2Vec
 
 # search_word_cal(): 일치율 계산
-def search_word_cal(word):
+def search_word_cal(word, mlkit_text):
     print("!search_word_cal 시작!")
     
     # 앞에서 정의한 함수들 모두 호출
     youtube, urls = get_youtube()
     new_title, urls = get_pytube_mp3(youtube, urls)
     s3_upload(new_title, urls)
-    aws_transcribe()
-    get_stt()
-    title_token, desc_token, script_token, tfidf_script_matrix = stt_tfidf()
-    tfidf_script_matrix = wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
-    keywords = get_tfidf_keyword(tfidf_script_matrix)
-    start, middle, end = stt_split(keywords)
-    title_stt_df = sbert_to_df(start, middle, end)
+    tr_upload = aws_transcribe()
+    
+    if tr_upload == "TR Upload SUCCESS":
+        get_stt()
+        title_token, desc_token, script_token, tfidf_script_matrix = stt_tfidf()
+        tfidf_script_matrix = wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
+        keywords = get_tfidf_keyword(tfidf_script_matrix)
+        start, middle, end = stt_split(keywords)
+        title_stt_df = sbert_to_df(start, middle, end)
     
     # 전처리
     script_token = list(script_token)
@@ -749,7 +775,14 @@ def search_word_cal(word):
         desc_token[i] = desc_token[i].split()
         script_token[i] = script_token[i].split()
     #word='설현 한밤'
-    thumb = [' '] #썸네일 없음
+    #thumb = [' '] #썸네일 없음
+    
+    ## mlkit 텍스트 가져오기!
+    thumb = []
+    for i in range(len(mlkit_text)):
+        if len(mlkit_text) == 0:
+            break
+        thumb.append(mlkit_text[i])
     
     global search_word
     okt = Okt()
@@ -781,7 +814,8 @@ def search_word_cal(word):
     desc_count = [int(sum((desc.count(search_word[j])) for j in range(word_count))) for desc in desc_token]
     script_count = [int(sum((script.count(search_word[j])) for j in range(word_count))) for script in script_token]
     
-    
+    print("!!! 썸네일 텍스트 카운트 !!!")
+    print(thumb_count)
     # 검색어 순서에 따라 가중치주기 2
     # 바보야매코드
     # 이미지: 일치율_검색어순서2_if문이용해서weight값조정.png
@@ -789,6 +823,7 @@ def search_word_cal(word):
     # 근데 100이 너무 허벌로 나옴..
     title_weight = []
     script_weight = []
+    thumb_weight = []
     desc_weight = []
     
     for i in range(len(title_token)):
@@ -832,26 +867,48 @@ def search_word_cal(word):
                     print("desc else-else")
                     desc_weight.append(1)
                     break
+           
+    ##################
+    for i in range(len(thumb)):   # 스크립트의 경우 초반 10개 단어에 대해
+        for j in range(word_count):
+            if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
+                if search_word[j] in script_token[i]:    # 초반 검색어가 영상 제목에 있는 경우
+                    print("thumb if-if")
+                    thumb_weight.append(5)     # 3
+                    break
+                else:
+                    print("thumb if-else")
+                    thumb_weight.append(1)     # 1
+                    break
+            else:                   # 검색어가 초반이 아닌 경우
+                if search_word[j] in script_token[i]:   # 검색어가 제목에 있으면
+                    print("thumb else-if")
+                    thumb_weight.append(3)     # 2
+                    break
+                else:
+                    print("thumb else-else")
+                    thumb_weight.append(1)     # 1
+                    break
                 
     for i in range(len(script_token)):   # 스크립트의 경우 초반 10개 단어에 대해
         for j in range(word_count):
             if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
                 if search_word[j] in script_token[i]:    # 초반 검색어가 영상 제목에 있는 경우
                     print("script if-if")
-                    script_weight.append(10)
+                    script_weight.append(10)    # 10
                     break
                 else:
                     print("script if-else")
-                    script_weight.append(3)
+                    script_weight.append(3)     # 3
                     break
             else:                   # 검색어가 초반이 아닌 경우
                 if search_word[j] in script_token[i]:   # 검색어가 제목에 있으면
                     print("script else-if")
-                    script_weight.append(5)
+                    script_weight.append(5)     # 5
                     break
                 else:
                     print("script else-else")
-                    script_weight.append(3)
+                    script_weight.append(3)     # 3
                     break
     
 
@@ -898,6 +955,7 @@ def search_word_cal(word):
         
         log_title = np.log1p(title_count)
         log_desc = np.log1p(desc_count)
+        log_thumb = np.log1p(thumb_count)
         log_script = np.log1p(script_count)
         
 
@@ -909,7 +967,7 @@ def search_word_cal(word):
             #time = playtime_second_list[i]/10
             #print(time)
         
-            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[0]*5 + log_desc[i]*desc_weight[i])) / time) / word_count)
+            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + log_thumb[i]*thumb_weight[i] + log_desc[i]*desc_weight[i])) / time) / word_count)
 
             #print(sbert_score[i])
             
@@ -927,6 +985,7 @@ def search_word_cal(word):
             result[i] = 100 
     
     print("!search_word_cal 끝!")
+    print(result)
     return result, df['videoId']
     #print(result) 
 

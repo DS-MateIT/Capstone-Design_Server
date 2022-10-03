@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
 
 search_word = ""
+mlkit_text = []
 
 @app.route('/')
 def root():
@@ -23,7 +24,11 @@ def postData2():
     if request.method == 'POST' :
         post_mlkit = request.form['mlkitText']
         DBcount_test.DBtable().Insert(post_mlkit,'1')
+        global mlkit_text
+        mlkit_text.append(post_mlkit)
         print(post_mlkit)
+        print("~mlkit_text~")
+        print(mlkit_text)
         return post_mlkit
         
     else :
@@ -65,14 +70,16 @@ def srch():
             
         #### youtube_api코드 흐름 제어
 
-        """word = "설현 인터뷰"
-        youtube_api2.get_searchword(word)  
-        result, video_id = youtube_api2.search_word_cal(word)
+        #word = "먹방"
+        youtube_api2.get_searchword(post_srch)  
+        global mlkit_text
+        print(mlkit_text)
+        result, video_id = youtube_api2.search_word_cal(post_srch, mlkit_text)
 
         #result = youtube_api2.result_to_list()
         print("######## 일치율 타입 ##########")
         result = list(map(float, result))      # float로 변환
-        print(type(word))
+        print(type(search_word))
         
         video_id = list(video_id)
         #global rate_result
@@ -80,12 +87,12 @@ def srch():
             #rate_result.append(result[i])
         
         ## db Video_rate에 일치율 저장
-        DBcount_test.DBtable().rate_insert(word, video_id[0], result[0])
-        DBcount_test.DBtable().rate_insert(word, video_id[1], result[1])
-        DBcount_test.DBtable().rate_insert(word, video_id[2], result[2])
-        DBcount_test.DBtable().rate_insert(word, video_id[3], result[3])
-        DBcount_test.DBtable().rate_insert(word, video_id[4], result[4])
-        """
+        DBcount_test.DBtable().rate_insert(post_srch, video_id[0], result[0])
+        DBcount_test.DBtable().rate_insert(post_srch, video_id[1], result[1])
+        DBcount_test.DBtable().rate_insert(post_srch, video_id[2], result[2])
+        DBcount_test.DBtable().rate_insert(post_srch, video_id[3], result[3])
+        DBcount_test.DBtable().rate_insert(post_srch, video_id[4], result[4])
+        
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
         DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
