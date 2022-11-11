@@ -125,20 +125,20 @@ class DBtable:
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
                             
-        sql = '''insert into new_recentVideo (user_email,video_id) values(%s,%s)'''
-        curs.execute(sql,(user_email,video_id))
+        sql = '''insert into new_recentVideo (user_email,video_id, count) values(%s,%s,%s)'''
+        curs.execute(sql,(user_email,video_id,1))
         db.commit()
         db.close()
     
     
-    ## 최근 본 영상 select 
+    ## 최근 본 영상 get result  select
     def Recent_Video_Getresult(self,user_email):
         ret = []
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
              
-        sql = "select video_id from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 5";
-               
+        sql = "select video_id from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 3";
+
         curs.execute(sql,user_email)
              
         rows = curs.fetchall()
@@ -146,6 +146,72 @@ class DBtable:
         for e in rows:
             temp = {'video_id':e[0]}
             ret.append(temp)
+            
+        db.commit()
+        db.close()
+        return ret
+    
+    
+    ## 최근 본 영상 count update 
+    def Recent_Video_Update(self, user_email, video_id): 
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+        
+        sql = "update new_recentVideo set count=count+1 where video_id=%s"
+        curs.execute(sql,video_id)
+        db.commit()
+        db.close()
+        
+    ## 최근 본 영상 select
+    def Recent_Video_Select(self, user_email, video_id):
+        ret = []
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+        
+        sql = '''select EXISTS (select * from new_schema.new_recentVideo where user_email=%s AND video_id=%s) as success;'''
+        curs.execute(sql,(user_email,video_id))
+        
+        rows = curs.fetchall()
+        
+        for e in rows:
+            temp = {'success':e[0]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        
+        return ret
+    
+    
+    
+    ## 파이차트용- 자주 언급된 단어 insert
+    def video_sttword_Insert(self,video_id,stt_word1,stt_word2,stt_word3,user_email):
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+                            
+        sql = '''insert into new_video (video_id, stt_word1, stt_word2, stt_word3, user_email) values(%s,%s,%s,%s,%s)'''
+        curs.execute(sql,(video_id,stt_word1,stt_word2,stt_word3,user_email))
+        db.commit()
+        db.close()
+    
+    
+    
+    ## 파이차트용- 자주 언급된 단어 select
+    def video_sttword_Getresult(self,user_email,video_id):
+        ret = []
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select * from new_video where user_email=%s AND video_id=%s desc LIMIT 3";
+        curs.execute(sql,(user_email,video_id))
+             
+        rows = curs.fetchall()
+
+        for e in rows:
+            temp = {'video_id':e[0],'stt_word1':e[1], 'stt_word2':e[2], 'stt_word3':e[3]}
+            ret.append(temp)
+            
+            
             
         db.commit()
         db.close()
