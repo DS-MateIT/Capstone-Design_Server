@@ -92,7 +92,6 @@ def get_youtube():
     return youtube, urls
 
 
-   
 ####pytube 영상 다운로드
 from pytube import YouTube
 import glob
