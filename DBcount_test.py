@@ -124,8 +124,8 @@ class DBtable:
     def Recent_Video_insert(self, user_email,video_id):
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
-                            
-        sql = '''insert into new_recentVideo (user_email,video_id, count) values(%s,%s,%s)'''
+        
+        sql = '''insert into new_recentVideo (user_email,video_id,count) values(%s,%s,%s) ON DUPLICATE KEY UPDATE count=count+1'''
         curs.execute(sql,(user_email,video_id,1))
         db.commit()
         db.close()
