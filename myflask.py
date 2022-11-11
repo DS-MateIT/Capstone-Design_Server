@@ -47,19 +47,18 @@ def srch():
         DBcount_test.DBtable().Insert2(post_srch)
         
         
-        
         # 일치율 코드에 srch키워드 적용하기
         #print(get_searchword(post_srch))
         
         
         ### 연관검색어 크롤링
-        keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        #keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
 
-        print(keywords) #연관검색어 3개 추출 결과  # type : list
-        srch_craw1 = keywords[0] # print(srch_craw1)
-        srch_craw2 = keywords[1]
-        srch_craw3 = keywords[2]
+        #print(keywords) #연관검색어 3개 추출 결과  # type : list
+        #srch_craw1 = keywords[0] # print(srch_craw1)
+        #srch_craw2 = keywords[1]
+        #srch_craw3 = keywords[2]
         
         # 디비로 보내기 
         #DBcount_test.DBtable().Insert(post_srch,'1')
@@ -67,24 +66,21 @@ def srch():
             
         # 일치율 코드로 srch키워드 보내기
         #youtube_api_일치율.get_searchword(post_srch)
-            
+        
         #### youtube_api코드 흐름 제어
 
-        #word = "먹방"
+        #word = "미드소마 리뷰"
         youtube_api2.get_searchword(post_srch)  
         global mlkit_text
         print(mlkit_text)
         result, video_id = youtube_api2.search_word_cal(post_srch, mlkit_text)
+        #result, video_id = youtube_api2.search_word_cal(word)
+        #video_id = youtube_api2.search_word_cal(word)
 
-        #result = youtube_api2.result_to_list()
         print("######## 일치율 타입 ##########")
-        result = list(map(float, result))      # float로 변환
-        print(type(search_word))
+        #result = list(map(float, result))      # float로 변환
         
         video_id = list(video_id)
-        #global rate_result
-        #for i in range(len(result)):
-            #rate_result.append(result[i])
         
         ## db Video_rate에 일치율 저장
         DBcount_test.DBtable().rate_insert(post_srch, video_id[0], result[0])
@@ -95,7 +91,7 @@ def srch():
         
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
+        #DBcount_test.DBtable().Relatedword_insert(word, srch_craw1, srch_craw2, srch_craw3)
         
        
         

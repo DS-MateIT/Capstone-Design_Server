@@ -9,9 +9,7 @@ import myconfig
 
 # 생각해볼 점
 # 1. 워드클라우드 zero divde오류 -> tfidf_script_matrix 값이 0이어서 나는 오류 해결
-# 2. 안드로이드 검색 결과에 쇼츠가 나오면 오류 -> 이거 youtube data api로 쇼츠 가져오는 방법을 모르겠음
-# 3. 수행시간: 안드로이드 검색어 가져옴 -> 일치율 계산 하는데 3-4분 정도...
-# 4. 일치율 수식 개선
+# 2. 일치율 수식 개선
 
 search_word = ""
 df = pd.Series()   # df도 전역변수로 유지
@@ -24,10 +22,7 @@ def get_searchword(word):
     search_word = word
     print(search_word)
     print("!get_searchword 끝!")
-    
-    ######
-    #get_youtube()
-    #return search_word
+
 
 
 # get_youtube() youtube data api로 검색결과 가져오기 & df에 저장
@@ -38,36 +33,31 @@ def get_youtube():
     youtube = build(YOUTUBE_API_SERVICE_NAME,YOUTUBE_API_VERSION,developerKey=API_KEY)
     
     
-    # 검색어는 안드로이드에서 받아온 플라스크에서 가져온다
-    #def get_searchword(android_searchword):
-    #    search_word = android_searchword
-    #    return search_word
-    
     # 검색 결과 가져오기
     global search_word
     search_response = youtube.search().list(
-        q = #"김연아 고우림 ",   # 검색어 입력하기 (1개 이상 단어 가능) ex) 설현 한밤   
-            search_word,
-        order = "relevance",    # 관련성 순으로 보여줌
-        part = "snippet",
-        maxResults = 5
+        part="id,snippet",   # id빼고 snippet만 해도 되는지 확인해보기
+        type='video',
+        q=search_word,
+        videoDuration='medium',   # 쇼츠는 제외, type을 지정하니까 됨...어이무
+        maxResults=5
     ).execute()
     
-    #print(search_response)
+    print(search_response)
     
     # 영상 title, description, thumbnail등의 정보는 items항목에 있으므로 items가져옴
     video_json = {}
     json_index = 0
     
-    
     for item in search_response['items']:
-        if item['id']['kind'] == 'youtube#video':   ### 쇼츠가 포함된 경우 오류가 발생하는데 쇼츠 어케 가져오지
-            video_json[json_index] = {"videoId": item['id']['videoId'], 
-                                      "title": item['snippet']['title'], 
-                                      "desc" : item['snippet']['description'], 
-                                      "thumbnail": item['snippet']['thumbnails']['medium']['url']}
-        
-            json_index += 1 
+  
+        #if item['id']['kind'] == 'youtube#video' :  ### 쇼츠가 포함된 경우 오류가 발생하는데 쇼츠 어케 가져오지
+        video_json[json_index] = {"videoId": item['id']['videoId'], 
+                                  "title": item['snippet']['title'].replace('/', ' '), 
+                                  "desc" : item['snippet']['description'], 
+                                  "thumbnail": item['snippet']['thumbnails']['medium']['url']}
+        #print(video_json[json_index])
+        json_index += 1 
         
     # json을 데이터프레임으로 변환
     videoId = []
@@ -86,12 +76,14 @@ def get_youtube():
                        "title": title,
                        "desc": desc,
                        "thumbnail": thumbnail})
+    print(df['title'])
     df['script'] = pd.Series()    # 빈 script컬럼 만들어둠
     
     urls = []
     for i in range(len(df)):
         urls.append("https://www.youtube.com/watch?v="+str(df['videoId'][i]))
     
+    #re.sub('/', '', df['title'][i])  # 슬래시는 공백으로 대체
     print(df)
     
     ######
@@ -127,16 +119,18 @@ def get_pytube_mp3(youtube, urls):
         for x in files:
             if not os.path.isdir(x):
                 filename = os.path.splitext(x)
-                new_title.append(filename)
+                if filename not in new_title:
+                    new_title.append(filename)
                 try:
                     os.rename(x,filename[0] + '.mp3')
+
                 except:
                     pass
+    
             
     ######            
     #s3_upload(new_title, urls)
     return new_title, urls
-        
 
 
 ####s3연동 
@@ -181,6 +175,8 @@ def s3_upload(new_title, urls):
     
     for i in range(len(urls)):
         #filepath.append("C:/22_hg076_server/pytube_mp3/" + str(new_title[i][0]) + ".mp3")
+        #df['title'][i] = re.sub('/', '', df['title'][i]) # 슬래시는 공백으로 대체
+
         filepath.append("C:/22_hg076_server/" + str(new_title[i][0]) + ".mp3")
         key.append("youtube_datas/"+df['videoId'][i]+"/"+ df['title'][i]+".mp3")
         
@@ -190,20 +186,16 @@ def s3_upload(new_title, urls):
     
     s3 = boto3.client('s3')
     
-    ### s3 버킷에서 videoid 읽어오기 - 중복 업로드 방지 ###
-    """obj_list = s3.list_objects(Bucket=BUCKET_NAME, Prefix='youtube_datas/')
-    contents_list = obj_list['Contents']
-    
-    for content in contents_list:
-        uploaded_youtube = content['Key'].split('/')[1]    # videoId 가져옴
-        #uploaded_youtube = content['Key']
-        uploaded_list.append(uploaded_youtube)
-    uploaded_list = list(set(uploaded_list))
-    print("업로드된 영상 videoId")
-    print(uploaded_list)
-    """
     for i in range(len(filepath)):
         res = s3.upload_file(filepath[i], BUCKET_NAME, key[i])   #
+
+
+    ### 로컬에 있는 영상 삭제(안 지우면 로컬에 있는 영상이 s3에 업로드됨..)
+    files = glob.glob("*.mp3")
+    for x in files:
+        if not os.path.isdir(x):
+            filename = os.path.splitext(x)
+            os.remove(filename[0]+'.mp3')         
 
     ######
     #aws_transcribe()
@@ -213,6 +205,7 @@ def s3_upload(new_title, urls):
 import time
 import boto3
 from urllib import request
+import re
 
 AWS_ACCESS_KEY = myconfig.AWS_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY = myconfig.AWS_SECRET_ACCESS_KEY
@@ -232,6 +225,7 @@ def aws_transcribe():
 
     global df
     for i in range(len(df['videoId'])):
+        
         job_name = df['videoId'][i] + "dic"   #실행할 tr 이름 #dic반영할 경우 
         uri = "s3://mateityoutube/youtube_datas/" + df['videoId'][i]+ "/" + df['title'][i]+".mp3"  #Tr에 필요한 영상 주소
         job_uri = uri
@@ -253,7 +247,7 @@ def aws_transcribe():
                 }
             ] ,
             Settings={
-                #'VocabularyName': 'SHonly',
+            #    'VocabularyName': 'SHonly',
                 #딕셔너리 추가 반영
             #    'ShowSpeakerLabels': True|False,
             #    'MaxSpeakerLabels': 123,
@@ -269,29 +263,23 @@ def aws_transcribe():
         while True:
             status = transcribe.get_transcription_job(TranscriptionJobName = job_name)
             if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
+                data = pd.read_json(status['TranscriptionJob']['Transcript']['TranscriptFileUri'])
+                print("! 가져온 tr ! {}".format(data))
+                stt.append(data['results']['transcripts'][0]['transcript'])
                 break
             print("Not ready yet...")
-            time.sleep(5)
+            time.sleep(15)
         print(status)
 
+        #if status['TranscriptionJob']['TranscriptionJobStatus'] == "COMPLETED":
+        print("가져온 stt: {}".format(stt[i]))
+    
+
+    #for i in range(len(df['videoId'])):
+        
+
     return "TR Upload SUCCESS"
-    
-    # Transcribe 결과가 저장된 웹주소
-    """save_json_uri = status['TranscriptionJob']['Transcript'][uri]   
-            
-    # 웹서버 결과 파이썬으로 불러오기
-    load = request.urlopen(save_json_uri)
-    confirm = load.status
-    rst = load.read().decode('utf-8')
-    print(rst)
-    items.append(rst)
-    
-    for i in range(len(items)):
-        items[i] = json.loads(items[i])
-        stt.append(items[i]['results']['transcripts'][0]['transcript'])
-    """
-    ######
-    #get_stt()
+
     
 
 
@@ -300,49 +288,6 @@ def aws_transcribe():
 import json
 import boto3
 
-# get_stt(): s3에 업로드된 stt 가져오기
-def get_stt():   
-    s3 = boto3.resource('s3', 'us-east-2')
-    #s3://mateityoutube/2DEDNW5Jq4Q/2DEDNW5Jq4Q.json
-    # Transcribe 결과가 저장된 웹주소
-
-    items = []
-    #stt = []
-    global stt
-    print("get_stt() 시작!")
-    global df
-    for i in range(len(df['videoId'])):
-        obj = s3.Object(AWS_S3_BUCKET_NAME, "youtube_datas/" + df['videoId'][i]+"/"+ df['videoId'][i] + "dic.json")
-
-        #obj = s3.get_object(AWS_S3_BUCKET_NAME, "youtube_datas/" + df['videoId'][i]+"/"+ df['videoId'][i] + "dic.json")
-        #읽기...
-        data = obj.get()['Body'].read().decode('utf-8')  ## 쇼츠가 아닌데도 여기서 자꾸 오류가 남..
-        #data = obj['Body'].read().decode('utf-8') 
-
-        items.append(data)
-    print("~items 길이~")
-    print(len(items))
-    #print(items)
-        
-    #obj = s3.Object(AWS_S3_BUCKET_NAME, videoId[4]+"/"+ videoId[4] + ".json")
-    #data = obj.get()['Body'].read().decode('utf-8') 
-    #items.append(data)
-    
-    for i in range(len(items)):
-        items[i] = json.loads(items[i])
-        stt.append(items[i]['results']['transcripts'][0]['transcript'])
-    
-    print("~stt 길이~")
-    print(len(stt))
-    print(stt)
-    
-    
-    print("get_stt() 끝!")
-    
-    ######
-    #stt_tfidf(stt)
-    #stt_tfidf()
-    #return stt
 
 #@@----------------------df에 script 추가
 from konlpy.tag import Okt
@@ -357,7 +302,8 @@ def stt_tfidf():
     global df
     global stt
     for i in range(len(stt)):
-        df.iloc[i, 4]=stt[i]
+        df['script'][i]=stt[i]
+    #df['script'] = stt
     print("~df['script']~")
     print(df['script'])
     
@@ -488,14 +434,17 @@ import numpy as np
 def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix):
     #title_token, desc_token, script_token, tfidf_script_matrix = stt_tfidf()
     global df
+    #global isShorts
+
     for i in range(len(tfidf_script_matrix)):
         
         print(tfidf_script_matrix.iloc[i, :].sum())
         # 현재 tfidf 행렬 값이 모두 0이면 워드클라우드 오류가 발생하므로
-        if tfidf_script_matrix.iloc[i, :].sum() == 0.0:
+        """if tfidf_script_matrix.iloc[i, :].sum() == 0.0:
             print("!주요 키워드가 없습니다!")
+            isShorts[i] = True   # 스크립트가 없는 영상이므로 쇼츠로 판단
             continue
-        
+        """
         
         fp = 'malgun'  #fp = 'Pretendard-Regular.otf' 예쁜 폰트,,
         mask = np.array(Image.open('./resources/cloud.png')) #구름모양
@@ -541,9 +490,6 @@ def wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
     s3 = boto3.client('s3')
     #filepath = "C:/Noggro/" + videoId[2] +  ".png"
     for i in range(len(df['videoId'])):
-        if tfidf_script_matrix.iloc[i, :].sum() == 0.0:
-            print("!주요 키워드가 없습니다!")
-            continue
         filepath = "C:/22_hg076_server/wordcloud/" + df['videoId'][i] +  ".png"
         #s3://mateityoutube/youtube_datas/776dS8Rmkhs/
         s3_put_object(s3, AWS_S3_BUCKET_NAME, filepath,"youtube_datas/"+ df['videoId'][i]+ "/" +df['videoId'][i]+".png")
@@ -575,8 +521,11 @@ def get_tfidf_keyword(tfidf_script_matrix):
     
     # 영상별로 tf-idf값이 가장 높은 단어(words)와 그 값(values)
     # stt로 한 번..
-    
+    #global isShorts
     for i in range(len(tfidf_script_matrix)):
+        """if isShorts[i] == True:
+            continue
+        """
         #words.append(sorted(tfidf_matrix.iloc[i, :].index, reverse=True))
         
         # tfidf matrix 내림차순 정렬
@@ -604,8 +553,6 @@ def get_tfidf_keyword(tfidf_script_matrix):
     return keywords
 
 
-
-
 #### sentence bert
 # stt_split(): stt에서 마침표 기준으로 문장 나누기(초반, 중반, 후반)
 def stt_split(keywords):
@@ -613,7 +560,10 @@ def stt_split(keywords):
     
     stt_list = []
     global stt
+    #global isShorts
     for i in range(len(stt)):
+        #if len(stt[i]) == 0:
+        #    continue
         stt[i]= '.\n'.join(stt[i].split(". "))   # 마침표(.) 기준으로 문장 나누고 엔터
         stt_list.append(stt[i].splitlines())   # 엔터 기준으로 문자 split해서 한 줄씩
     
@@ -695,26 +645,21 @@ def sbert_to_df(start, middle, end):
     #start, middle, end = stt_split()
     #### (제목, 초반-중반)
     # 초반-중반 합치기 
-    """stt_start_middle = []
+    stt_start_middle = []
     for i in range(len(start)):
         stt_start_middle.append('\n'.join(start[i][:3])+'\n'.join(middle[i][:3]))
     
-    top_results = []
-    #for i in range(len(stt_start_middle)):
-    #    top_results.append(sbert_stt_rate(my_model, title, stt_start_middle[i]))"""
+    
     global df
     titles = list(df['title'])
     
-    middle_list = []
-    for i in range(len(middle)):
-        middle_list.append('\n'.join(middle[i][:3]))
-        
-    for i in range(len(middle_list)):
-        top_results = sbert_stt_rate(my_model, titles, middle_list[i])
+    top_results = sbert_stt_rate(my_model, titles, stt_start_middle)
+
+
     print(top_results)
     id_list = []
     title_list = []
-    new_middle_list = []
+    stt_list = []
     list_score = []
     
     #for i in range(len(stt_start_middle)):
@@ -722,12 +667,14 @@ def sbert_to_df(start, middle, end):
     for j, (score, idx) in enumerate(zip(top_results[0], top_results[1])):
         id_list.append(list(df['videoId'])[idx])
         title_list.append(list(df['title'])[idx])
-        new_middle_list.append(middle_list[idx])
+        stt_list.append(stt_start_middle[idx])
         list_score.append(float(score))
         
-    title_stt_df = pd.DataFrame(list(zip(id_list, title_list, new_middle_list, list_score)), columns=['videoId', 'title', 'stt(middle)', 'score'])
+    title_stt_df = pd.DataFrame(list(zip(id_list, title_list, stt_list, list_score)), columns=['videoId', 'title', 'stt(start-middle)', 'score'])
     print("!! title_stt_df!!")
-    print(title_stt_df.iloc[:, 1:])
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        print(title_stt_df.iloc[:, 1:])
+
     return title_stt_df
     #global search_word
     #search_word_cal(search_word)
@@ -740,10 +687,7 @@ import isodate
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-"""search_word = ['설현', '설현 한밤', '김연아', '김연아 설현', 'AOA 설현 한밤', '김연아 한밤',
-               '김연아 설현 레전드', '설현 입간판', '설현 한밤 입간판', 'AOA 설현 입간판',
-               '쯔위 설현', '쯔위 설현 한밤', '설현 김연아', '설현 쯔위']
-"""    
+   
 
 #title_token['title'] = list(title_token['title'])
 
@@ -761,13 +705,13 @@ def search_word_cal(word, mlkit_text):
     tr_upload = aws_transcribe()
     
     if tr_upload == "TR Upload SUCCESS":
-        get_stt()
+        #get_stt()
         title_token, desc_token, script_token, tfidf_script_matrix = stt_tfidf()
         tfidf_script_matrix = wordcloud_upload(title_token, desc_token, script_token, tfidf_script_matrix)
         keywords = get_tfidf_keyword(tfidf_script_matrix)
         start, middle, end = stt_split(keywords)
         title_stt_df = sbert_to_df(start, middle, end)
-    
+
     # 전처리
     script_token = list(script_token)
     for i in range(len(title_token)):
@@ -775,13 +719,14 @@ def search_word_cal(word, mlkit_text):
         desc_token[i] = desc_token[i].split()
         script_token[i] = script_token[i].split()
     #word='설현 한밤'
-    #thumb = [' '] #썸네일 없음
+    thumb = [' '] #썸네일 없음
     
     ## mlkit 텍스트 가져오기!
     thumb = []
     for i in range(len(mlkit_text)):
-        if len(mlkit_text) == 0:
-            break
+        if len(mlkit_text[i]) == 0:
+            mlkit_text[i] = ''
+            continue
         thumb.append(mlkit_text[i])
     
     global search_word
@@ -789,11 +734,9 @@ def search_word_cal(word, mlkit_text):
     search_word = okt.morphs(word) # 형태소로 추출
     print(search_word) 
     word_count = len(search_word) #search 키워드 명사의 개수
-    
-    #title_stt_df = sbert_to_df()
-    #youtube = get_youtube()
 
     global df
+    
     # 검색어 순서에 따라 가중치주기 1
     # 이 방법은 키워드가 나오면 count값이 바로 높아지는 경향..
     # 그래도 어느 정도 관련없는 검색어에 대해 일치율이 떨어지기는 함
@@ -816,11 +759,13 @@ def search_word_cal(word, mlkit_text):
     
     print("!!! 썸네일 텍스트 카운트 !!!")
     print(thumb_count)
-    # 검색어 순서에 따라 가중치주기 2
-    # 바보야매코드
-    # 이미지: 일치율_검색어순서2_if문이용해서weight값조정.png
-    # 관련없는 검색어와 관련있는 검색어의 일치율 차이가 적절
-    # 근데 100이 너무 허벌로 나옴..
+
+
+    #title_weight = 30
+    #thumb_weight = 15
+    #desc_weight = 10
+    #script_weight = 40
+    
     title_weight = []
     script_weight = []
     thumb_weight = []
@@ -831,20 +776,20 @@ def search_word_cal(word, mlkit_text):
             if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
                 if search_word[j] in title_token.iloc[i, 1]:    # 초반 검색어가 영상 제목에 있는 경우
                     print("title if-if")
-                    title_weight.append(15)
+                    title_weight.append(30)    # 15
                     break
                 else:
                     print("title if-else")
-                    title_weight.append(5)
+                    title_weight.append(10)     # 5
                     break
             else:                   # 검색어가 초반이 아닌 경우
                 if search_word[j] in title_token.iloc[i, 1]:   # 검색어가 제목에 있으면
                     print("title else-if")
-                    title_weight.append(10)
+                    title_weight.append(20)    # 10
                     break
                 else:
                     print("title else-else")
-                    title_weight.append(5)
+                    title_weight.append(10)     # 5
                     break
                 
     for i in range(len(desc_token)):
@@ -852,42 +797,42 @@ def search_word_cal(word, mlkit_text):
             if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
                 if search_word[j] in desc_token[i]:    # 초반 검색어가 영상 제목에 있는 경우
                     print("desc if-if")
-                    desc_weight.append(5)
+                    desc_weight.append(10)       # 5
                     break
                 else:
                     print("desc if-else")
-                    desc_weight.append(1)
+                    desc_weight.append(3)       # 1
                     break
             else:                   # 검색어가 초반이 아닌 경우
                 if search_word[j] in desc_token[i]:   # 검색어가 제목에 있으면
                     print("desc else-if")
-                    desc_weight.append(3)
+                    desc_weight.append(5)       # 3
                     break
                 else:
                     print("desc else-else")
-                    desc_weight.append(1)
+                    desc_weight.append(3)       # 1
                     break
            
     ##################
-    for i in range(len(thumb)):   # 스크립트의 경우 초반 10개 단어에 대해
+    for i in range(len(thumb)):   # 썸네일
         for j in range(word_count):
             if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
-                if search_word[j] in script_token[i]:    # 초반 검색어가 영상 제목에 있는 경우
+                if search_word[j] in thumb[i]:    # 초반 검색어가 영상 제목에 있는 경우
                     print("thumb if-if")
-                    thumb_weight.append(5)     # 3
+                    thumb_weight.append(15)     # 5
                     break
                 else:
                     print("thumb if-else")
-                    thumb_weight.append(1)     # 1
+                    thumb_weight.append(5)     # 1
                     break
             else:                   # 검색어가 초반이 아닌 경우
-                if search_word[j] in script_token[i]:   # 검색어가 제목에 있으면
+                if search_word[j] in thumb[i]:   # 검색어가 제목에 있으면
                     print("thumb else-if")
-                    thumb_weight.append(3)     # 2
+                    thumb_weight.append(10)     # 3
                     break
                 else:
                     print("thumb else-else")
-                    thumb_weight.append(1)     # 1
+                    thumb_weight.append(5)     # 1
                     break
                 
     for i in range(len(script_token)):   # 스크립트의 경우 초반 10개 단어에 대해
@@ -895,20 +840,20 @@ def search_word_cal(word, mlkit_text):
             if j <= word_count/4:   # 검색어 초반인 경우 ex) 검색어가 3단어 -> 0, 1 검색어가 6단어 -> 0, 1, 2
                 if search_word[j] in script_token[i]:    # 초반 검색어가 영상 제목에 있는 경우
                     print("script if-if")
-                    script_weight.append(10)    # 10
+                    script_weight.append(40)    # 10
                     break
                 else:
                     print("script if-else")
-                    script_weight.append(3)     # 3
+                    script_weight.append(25)     # 3
                     break
             else:                   # 검색어가 초반이 아닌 경우
                 if search_word[j] in script_token[i]:   # 검색어가 제목에 있으면
                     print("script else-if")
-                    script_weight.append(5)     # 5
+                    script_weight.append(30)     # 5
                     break
                 else:
                     print("script else-else")
-                    script_weight.append(3)     # 3
+                    script_weight.append(25)     # 3
                     break
     
 
@@ -955,9 +900,13 @@ def search_word_cal(word, mlkit_text):
         
         log_title = np.log1p(title_count)
         log_desc = np.log1p(desc_count)
-        log_thumb = np.log1p(thumb_count)
+        #log_thumb = np.log1p(thumb_count)
         log_script = np.log1p(script_count)
         
+        print("log_title은! {}".format(log_title))
+        print("log_desc은! {}".format(log_desc))
+        print("thumb은! {}".format(thumb_count))
+        print("log_script는! {}".format(log_script))
 
         for i in range(len(title_count)):   
             
@@ -967,17 +916,18 @@ def search_word_cal(word, mlkit_text):
             #time = playtime_second_list[i]/10
             #print(time)
         
-            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + log_thumb[i]*thumb_weight[i] + log_desc[i]*desc_weight[i])) / time) / word_count)
+            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[0]*thumb_weight[0] + log_desc[i]*desc_weight[i])) / time) / word_count)
 
-            #print(sbert_score[i])
+            print("~sbert_score~")
+            print(sbert_score[i])
             
         return result
 
     result = calculation(title_count, thumb_count, desc_count, script_count, playtime)
     
-    ### result에 100을 곱함
+    ### result에 10을 곱함
     for i in range(len(result)):
-        #result[i] *= 100
+        result[i] *= 10
         result[i] = round(result[i],2)   # 소수점 둘째자리까지
         
         # 일치율 값이 100을 넘을 경우에 대한 예외처리
@@ -987,22 +937,3 @@ def search_word_cal(word, mlkit_text):
     print("!search_word_cal 끝!")
     print(result)
     return result, df['videoId']
-    #print(result) 
-
-
-# result_to_list(): 계산한 일치율을 리스트로
-"""def result_to_list():
-    print("!result_to_list 시작!")
-    result_list = []
-    #for word in search_word:
-    global search_word
-    result_list.append(search_word_cal(search_word))
-    
-    # 2차원 -> 1차원으로
-    result_list = sum(result_list, [])
-    
-    print(len(result_list))
-    for i in range(len(result_list)):
-        print(result_list[i])
-    print("!result_to_list 끝!")
-    return result_list"""
