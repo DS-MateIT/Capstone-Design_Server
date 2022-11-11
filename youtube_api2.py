@@ -60,6 +60,7 @@ def get_youtube():
         json_index += 1 
         
     # json을 데이터프레임으로 변환
+    global videoId
     videoId = []
     title = []
     desc = []
@@ -263,6 +264,12 @@ def aws_transcribe():
         while True:
             status = transcribe.get_transcription_job(TranscriptionJobName = job_name)
             if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
+<<<<<<< HEAD
+                break
+            print("Not ready yet...")
+            time.sleep(5)
+        print(status)
+=======
                 data = pd.read_json(status['TranscriptionJob']['Transcript']['TranscriptFileUri'])
                 print("! 가져온 tr ! {}".format(data))
                 stt.append(data['results']['transcripts'][0]['transcript'])
@@ -273,6 +280,7 @@ def aws_transcribe():
 
         #if status['TranscriptionJob']['TranscriptionJobStatus'] == "COMPLETED":
         print("가져온 stt: {}".format(stt[i]))
+>>>>>>> bb58e5ff017c4f68631ca77624aadf65c67bb962
     
 
     #for i in range(len(df['videoId'])):
@@ -548,6 +556,14 @@ def get_tfidf_keyword(tfidf_script_matrix):
     df['주요 단어(제목)'] = keywords['word']
     df['단어의 중요도(tf-idf)'] = keywords['tf-idf']
     
+    
+    ### 파이차트 그리
+    ###video_id값과 stt단어 3개 db에 저장하기 
+   
+    
+    #S3에 저장하기
+    
+    
     ######
     #stt_split(keywords)
     return keywords
@@ -614,7 +630,7 @@ def gpu_setting():
 
 # sbert_stt_rate(): 센텐스버트를 이용해 문장 간 유사도 계산            
 def sbert_stt_rate(model, mylist, mylist2):   
-    gpu_setting()
+    #gpu_setting()
     
     # 인코딩
     embedding = model.encode(mylist)

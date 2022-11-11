@@ -152,8 +152,37 @@ def videoId():
     video_id = request.form['videoId']
     email = request.form['email']
         
-    #최근 시청 DB에 insert - recent_id, user_email, video_id
-    DBcount_test.DBtable().Recent_Video_insert(email,video_id)
+    
+    data = DBcount_test.DBtable().Recent_Video_Select(email, video_id)
+    print(data[0]['success'])
+    
+     
+    # if 문 - email 과 video id 없으면 insert
+    if data[0]['success'] == 0 :
+        #최근 시청 DB에 insert - recent_id, user_email, video_id
+        DBcount_test.DBtable().Recent_Video_insert(email, video_id)
+        
+        #같은 video id 있으면 delete 해서 가장 최신 것만 남기기
+        #DELETE FROM new_schema.new_recentVideo WHERE recent_id IN (select * from (SELECT MIN(recent_id) FROM new_schema.new_recentVideo GROUP BY user_email, video_id HAVING COUNT(*) > 1) as tmp);
+    
+        
+        return video_id
+    
+    
+    # 있으면 update하고
+    elif data[0]['success'] == 1 :
+        # update 
+        DBcount_test.DBtable().Recent_Video_Update(email,video_id)
+        return video_id
+    
+    
+    
+    # insert id값 같은거되면 delete 코드
+    
+    
+    
+    
+    
     
     print(video_id) 
     return video_id
@@ -164,6 +193,8 @@ def videoId():
 def videoIdget():
     email = request.args.get('email')
     video_id = DBcount_test.DBtable().Recent_Video_Getresult(email) 
+    
+    
     
     
     jsonify(video_id)
