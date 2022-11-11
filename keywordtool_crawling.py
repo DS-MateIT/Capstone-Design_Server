@@ -15,6 +15,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.common.keys import Keys
+from pymouse import PyMouse
+import time
 
 def youtube_keyword(keywords):
     chrome_options = webdriver.ChromeOptions()
@@ -24,7 +26,9 @@ def youtube_keyword(keywords):
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get(URL)
     
+    # verify human 클릭
     time.sleep(3)
+
     #select_youtube = driver.find_element_by_class_name('nav-item-search-youtube nav-item').find_element_tag_name('a').
     #input_element = driver.find_element_by_xpath('//input[@id="search-form-youtube-keyword-md"]')  # 검색창
     input_element = wait(driver, 50).until(EC.element_to_be_clickable((By.XPATH, '//input[@id="search-form-youtube-keyword-md"]')))
@@ -32,12 +36,25 @@ def youtube_keyword(keywords):
     input_element.click()
     
     time.sleep(3)
-    
+
     #search_button = driver.find_element_by_class_name('search-form-youtube-submit')
     search_button = wait(driver, 50).until(EC.element_to_be_clickable((By.CLASS_NAME, 'search-form-youtube-submit')))
     search_button.click()
-    time.sleep(3)
+    time.sleep(10)
+    
+    #import pyautogui
+    #print(pyautogui.position())
+    
+    # verify human 클릭
+    #m = PyMouse()
+    #time.sleep(4) 
+    #m.press(130,520) 
+    #m.release(130,520)
+    #m.press(130,520) 
+    #time.sleep(4) # press for 4 seconds
+    #m.release(130,520)
 
+    #time.sleep(5)
     driver.execute_script("window.scrollTo(0, 300)")   # 페이지 스크롤
     auto_keywords = []   # 자동완성
 
@@ -81,6 +98,7 @@ def youtube_keyword(keywords):
     return auto_keywords
 
 
+keywords = youtube_keyword('지구오락실')
 '''
 keywords = youtube_keyword('마라탕 먹방')
 

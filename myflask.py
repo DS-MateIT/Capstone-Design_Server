@@ -46,31 +46,24 @@ def srch():
         # 디비 - 검색어 디비로 보내기 
         DBcount_test.DBtable().Insert2(post_srch)
         
-        
-        # 일치율 코드에 srch키워드 적용하기
-        #print(get_searchword(post_srch))
-        
-        
+ 
         ### 연관검색어 크롤링
-        #keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
 
-        #print(keywords) #연관검색어 3개 추출 결과  # type : list
-        #srch_craw1 = keywords[0] # print(srch_craw1)
-        #srch_craw2 = keywords[1]
-        #srch_craw3 = keywords[2]
+        print(keywords) #연관검색어 3개 추출 결과  # type : list
+        srch_craw1 = keywords[0] # print(srch_craw1)
+        srch_craw2 = keywords[1]
+        srch_craw3 = keywords[2]
         
         # 디비로 보내기 
-        #DBcount_test.DBtable().Insert(post_srch,'1')
+        DBcount_test.DBtable().Insert(post_srch,'1')
             
-            
-        # 일치율 코드로 srch키워드 보내기
-        #youtube_api_일치율.get_searchword(post_srch)
         
         #### youtube_api코드 흐름 제어
 
         #word = "미드소마 리뷰"
-        youtube_api2.get_searchword(post_srch)  
+        """youtube_api2.get_searchword(post_srch)  
         global mlkit_text
         print(mlkit_text)
         result, video_id = youtube_api2.search_word_cal(post_srch, mlkit_text)
@@ -88,7 +81,7 @@ def srch():
         DBcount_test.DBtable().rate_insert(post_srch, video_id[2], result[2])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[3], result[3])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[4], result[4])
-        
+        """
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
         #DBcount_test.DBtable().Relatedword_insert(word, srch_craw1, srch_craw2, srch_craw3)
@@ -111,10 +104,6 @@ def srch():
         return jsonify(data)
 
 
-
-
-
-    
     
 #시청한 영상 video_id - DB에 넣기
 '''
@@ -163,8 +152,37 @@ def videoId():
     video_id = request.form['videoId']
     email = request.form['email']
         
-    #최근 시청 DB에 insert - recent_id, user_email, video_id
-    DBcount_test.DBtable().Recent_Video_insert(email,video_id)
+    
+    data = DBcount_test.DBtable().Recent_Video_Select(email, video_id)
+    print(data[0]['success'])
+    
+     
+    # if 문 - email 과 video id 없으면 insert
+    if data[0]['success'] == 0 :
+        #최근 시청 DB에 insert - recent_id, user_email, video_id
+        DBcount_test.DBtable().Recent_Video_insert(email, video_id)
+        
+        #같은 video id 있으면 delete 해서 가장 최신 것만 남기기
+        #DELETE FROM new_schema.new_recentVideo WHERE recent_id IN (select * from (SELECT MIN(recent_id) FROM new_schema.new_recentVideo GROUP BY user_email, video_id HAVING COUNT(*) > 1) as tmp);
+    
+        
+        return video_id
+    
+    
+    # 있으면 update하고
+    elif data[0]['success'] == 1 :
+        # update 
+        DBcount_test.DBtable().Recent_Video_Update(email,video_id)
+        return video_id
+    
+    
+    
+    # insert id값 같은거되면 delete 코드
+    
+    
+    
+    
+    
     
     print(video_id) 
     return video_id
@@ -175,6 +193,8 @@ def videoId():
 def videoIdget():
     email = request.args.get('email')
     video_id = DBcount_test.DBtable().Recent_Video_Getresult(email) 
+    
+    
     
     
     jsonify(video_id)
