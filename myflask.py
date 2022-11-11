@@ -191,20 +191,21 @@ def videoIdget():
 def BMvideoId():
     user_email = request.form['useremail']
     videoid = request.form['videoid']
+    title = request.form['title']
     print(user_email, videoid) 
     
-    data = DBcount_test.DBtable().Bookmark_select(user_email, videoid)
+    data = DBcount_test.DBtable().Bookmark_select(user_email, videoid, title)
     print(data[0]['success'])
     
     # 북마크 테이블에 기록이 없으면
     if data[0]['success'] == 0 :
         #Bookmark_info 테이블에 넣기
-        DBcount_test.DBtable().Bookmark_insert(user_email, videoid)
+        DBcount_test.DBtable().Bookmark_insert(user_email, videoid, title)
         return videoid
     # 북마크 테이블에 기록이 있으면
     elif data[0]['success'] == 1 : 
-        #Bookmark_info 테이블에서 삭
-        DBcount_test.DBtable().Bookmark_del(user_email, videoid)
+        #Bookmark_info 테이블에서 삭제
+        DBcount_test.DBtable().Bookmark_del(user_email, videoid, title)
         return videoid
     
     return videoid
@@ -214,7 +215,8 @@ def BMvideoId():
 #useremail video_id get    
 @app.route('/BMvideoid', methods=['GET'])
 def BMvideoId2():
-    data = DBcount_test.DBtable().bookmark_Getresult();
+    email = request.args.get('email')
+    data = DBcount_test.DBtable().bookmark_Getresult(email);
     print(data)
     return jsonify(data) 
 
