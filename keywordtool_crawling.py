@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.common.keys import Keys
-from pymouse import PyMouse
+#from pymouse import PyMouse
 import time
 
 def youtube_keyword(keywords):
@@ -98,7 +98,7 @@ def youtube_keyword(keywords):
     return auto_keywords
 
 
-keywords = youtube_keyword('지구오락실')
+# keywords = youtube_keyword('지구오락실')
 '''
 keywords = youtube_keyword('마라탕 먹방')
 

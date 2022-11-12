@@ -137,8 +137,8 @@ class DBtable:
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
              
-        #sql = "select video_id,title from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 3";
-        sql = "select video_id from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 5";
+        sql = "select video_id,title from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 3";
+        #sql = "select video_id from new_recentVideo where user_email=%s ORDER BY recent_id DESC LIMIT 5";
 
         curs.execute(sql,user_email)
              
