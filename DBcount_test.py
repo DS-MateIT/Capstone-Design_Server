@@ -282,7 +282,21 @@ class DBtable:
         return ret
     
     
-    # 파이차트
+    # 파이차트 단어 넣기
+    def PieChart_insert(self, user_email,stt_word):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "INSERT INTO testDB.PieChart(user_email, stt_word) VALUES (%s, %s) ON DUPLICATE KEY UPDATE stt_word_count=stt_word_count+1;";
+                
+        curs.execute(sql,(user_email,stt_word))
+        db.commit()
+        db.close()
+    
+    
+    # 파이차트 만들기
     def PieChart_Getresult(self, email):
         ret = []
             

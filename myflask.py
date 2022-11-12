@@ -46,16 +46,16 @@ def srch():
         # 디비 - 검색어 디비로 보내기 
         DBcount_test.DBtable().Insert2(post_srch)
         
-        
-        # 일치율 코드에 srch키워드 적용하기
-        #print(get_searchword(post_srch))
-        
-        
+ 
         ### 연관검색어 크롤링
         keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
 
+<<<<<<< HEAD
         #print(keywords) #연관검색어 3개 추출 결과  # type : list
+=======
+        print(keywords) #연관검색어 3개 추출 결과  # type : list
+>>>>>>> 3b3c608cf918d234f02c0072cb49150e7da55cd1
         srch_craw1 = keywords[0] # print(srch_craw1)
         srch_craw2 = keywords[1]
         srch_craw3 = keywords[2]
@@ -63,14 +63,11 @@ def srch():
         # 디비로 보내기 
         DBcount_test.DBtable().Insert(post_srch,'1')
             
-            
-        # 일치율 코드로 srch키워드 보내기
-        #youtube_api_일치율.get_searchword(post_srch)
         
         #### youtube_api코드 흐름 제어
 
         #word = "미드소마 리뷰"
-        youtube_api2.get_searchword(post_srch)  
+        """youtube_api2.get_searchword(post_srch)  
         global mlkit_text
         print(mlkit_text)
         result, video_id = youtube_api2.search_word_cal(post_srch, mlkit_text)
@@ -88,7 +85,7 @@ def srch():
         DBcount_test.DBtable().rate_insert(post_srch, video_id[2], result[2])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[3], result[3])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[4], result[4])
-        
+        """
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
         DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
@@ -111,10 +108,6 @@ def srch():
         return jsonify(data)
 
 
-
-
-
-    
     
 #시청한 영상 video_id - DB에 넣기
 '''

@@ -24,7 +24,6 @@ def get_searchword(word):
     print("!get_searchword 끝!")
 
 
-
 # get_youtube() youtube data api로 검색결과 가져오기 & df에 저장
 def get_youtube():   
     API_KEY = myconfig.youtube_api_key # API Key
@@ -93,7 +92,6 @@ def get_youtube():
     return youtube, urls
 
 
-   
 ####pytube 영상 다운로드
 from pytube import YouTube
 import glob
@@ -273,7 +271,11 @@ def aws_transcribe():
         print(status)
 
         #if status['TranscriptionJob']['TranscriptionJobStatus'] == "COMPLETED":
+<<<<<<< HEAD
     
+=======
+        print("가져온 stt: {}".format(stt[i]))
+>>>>>>> 3b3c608cf918d234f02c0072cb49150e7da55cd1
 
     #for i in range(len(df['videoId'])):
         
