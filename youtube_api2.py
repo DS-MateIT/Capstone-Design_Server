@@ -274,6 +274,7 @@ def aws_transcribe():
         print("가져온 stt: {}".format(stt[i]))
 
 
+
     #for i in range(len(df['videoId'])):
         
 
