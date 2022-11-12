@@ -50,12 +50,7 @@ def srch():
         ### 연관검색어 크롤링
         keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
-
-<<<<<<< HEAD
-        #print(keywords) #연관검색어 3개 추출 결과  # type : list
-=======
         print(keywords) #연관검색어 3개 추출 결과  # type : list
->>>>>>> 3b3c608cf918d234f02c0072cb49150e7da55cd1
         srch_craw1 = keywords[0] # print(srch_craw1)
         srch_craw2 = keywords[1]
         srch_craw3 = keywords[2]
