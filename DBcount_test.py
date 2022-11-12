@@ -282,6 +282,28 @@ class DBtable:
         return ret
     
     
+    # 파이차트
+    def PieChart_Getresult(self, email):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='testDB', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select stt_word,stt_word_count from testDB.PieChart where user_email=%s ORDER BY stt_word_count DESC LIMIT 10";
+             
+        curs.execute(sql,(email))
+             
+        rows = curs.fetchall()
+
+        for e in rows:
+            temp = {'stt_word':e[0],'stt_word_count':e[1]}
+            ret.append(temp)
+            
+        db.commit()
+        db.close()
+        return ret
+    
+    
     
     
     ## 연관검색어 

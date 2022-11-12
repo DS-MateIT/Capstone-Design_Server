@@ -264,12 +264,6 @@ def aws_transcribe():
         while True:
             status = transcribe.get_transcription_job(TranscriptionJobName = job_name)
             if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
-<<<<<<< HEAD
-                break
-            print("Not ready yet...")
-            time.sleep(5)
-        print(status)
-=======
                 data = pd.read_json(status['TranscriptionJob']['Transcript']['TranscriptFileUri'])
                 print("! 가져온 tr ! {}".format(data))
                 stt.append(data['results']['transcripts'][0]['transcript'])
@@ -279,8 +273,6 @@ def aws_transcribe():
         print(status)
 
         #if status['TranscriptionJob']['TranscriptionJobStatus'] == "COMPLETED":
-        print("가져온 stt: {}".format(stt[i]))
->>>>>>> bb58e5ff017c4f68631ca77624aadf65c67bb962
     
 
     #for i in range(len(df['videoId'])):

@@ -52,16 +52,16 @@ def srch():
         
         
         ### 연관검색어 크롤링
-        #keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
 
         #print(keywords) #연관검색어 3개 추출 결과  # type : list
-        #srch_craw1 = keywords[0] # print(srch_craw1)
-        #srch_craw2 = keywords[1]
-        #srch_craw3 = keywords[2]
+        srch_craw1 = keywords[0] # print(srch_craw1)
+        srch_craw2 = keywords[1]
+        srch_craw3 = keywords[2]
         
         # 디비로 보내기 
-        #DBcount_test.DBtable().Insert(post_srch,'1')
+        DBcount_test.DBtable().Insert(post_srch,'1')
             
             
         # 일치율 코드로 srch키워드 보내기
@@ -91,7 +91,7 @@ def srch():
         
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        #DBcount_test.DBtable().Relatedword_insert(word, srch_craw1, srch_craw2, srch_craw3)
+        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
         
        
         
@@ -250,6 +250,18 @@ def BMvideoId2():
     data = DBcount_test.DBtable().bookmark_Getresult(email);
     print(data)
     return jsonify(data) 
+
+
+
+## STT 파이차트
+#useremail get    
+@app.route('/PieChart', methods=['GET'])
+def PieChart():
+    email = request.args.get('email')
+    data = DBcount_test.DBtable().PieChart_Getresult(email);
+    print(data)
+    return jsonify(data) 
+
 
  
 # 회원가입 할때 User 정보 저장
