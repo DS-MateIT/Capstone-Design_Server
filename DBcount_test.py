@@ -434,5 +434,7 @@ if __name__ == '__main__':
     #DBtable().Update('앵무새')
     #DBtable().DelEmp('돌고래')
     #DBtable().MaxCount()
-    test = DBtable().Getresult();
-    print(test)
+    #test = DBtable().Getresult();
+    
+    DBtable().PieChart_insert("iopjkl123@naver.com", "코코아")
+    #print(test)

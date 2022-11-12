@@ -271,11 +271,8 @@ def aws_transcribe():
         print(status)
 
         #if status['TranscriptionJob']['TranscriptionJobStatus'] == "COMPLETED":
-<<<<<<< HEAD
-    
-=======
         print("가져온 stt: {}".format(stt[i]))
->>>>>>> 3b3c608cf918d234f02c0072cb49150e7da55cd1
+
 
     #for i in range(len(df['videoId'])):
         
