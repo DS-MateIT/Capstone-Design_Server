@@ -230,6 +230,11 @@ def aws_transcribe():
         job_uri = uri
     #job_uri = "s3://mateityoutube/V2OPlREZP5Y/본격 공개! 설현의 뷰티 노하우 ‘심쿵 꿀팁’ @본격연예 한밤 13회 20170228.mp3"
     
+        # 같은 job_name tr이 올라가 있는지 확인(이전에 돌린 적이 있는지)
+        if check_job_name(transcribe, job_name) == False:
+            transcribe.delete_transcription_job(
+                TranscriptionJobName = job_name
+            )
 
         transcribe.start_transcription_job(
             TranscriptionJobName = job_name,
@@ -280,7 +285,13 @@ def aws_transcribe():
 
     return "TR Upload SUCCESS"
 
-    
+# 중복 tr인지 체크하고 tr이름이 중복이면 삭제
+def check_job_name(transcribe, job_name):
+    existed_tr = transcribe.list_transcription_jobs(MaxResults=50)
+    for job in existed_tr['TranscriptionJobSummaries']:
+        if job_name == job['TranscriptionJobName']:
+            return False
+    return True
 
 
 # S3에 위치한 json 파일(STT TR 파일) 을 읽어오기( 다운로드 없이 바로 )
@@ -540,14 +551,16 @@ def get_tfidf_keyword(tfidf_script_matrix):
         word = list(sorted_tfidf.index)
         words.append(word[:3])
 
-    
     keywords['word'] = words
+    print("keywords['word']: ",format(keywords['word']))
     keywords['tf-idf'] = values
-    
+
+    keywords['word'] = sum([], keywords['word'])
+    print("sum한 결과: ", format(keywords['word']))
 
     df['주요 단어(제목)'] = keywords['word']
+    print(df['주요 단어(제목)'])
     df['단어의 중요도(tf-idf)'] = keywords['tf-idf']
-    
     
     ### 파이차트 그리
     ###video_id값과 stt단어 3개 db에 저장하기 
@@ -734,7 +747,6 @@ def search_word_cal(word, mlkit_text):
     for i in range(len(mlkit_text)):
         if len(mlkit_text[i]) == 0:
             mlkit_text[i] = ''
-            continue
         thumb.append(mlkit_text[i])
     
     global search_word
@@ -923,8 +935,7 @@ def search_word_cal(word, mlkit_text):
 
             #time = playtime_second_list[i]/10
             #print(time)
-        
-            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[0]*thumb_weight[0] + log_desc[i]*desc_weight[i])) / time) / word_count)
+            result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[j]*thumb_weight[j] + log_desc[i]*desc_weight[i])) / time) / word_count)
 
             print("~sbert_score~")
             print(sbert_score[i])
@@ -935,7 +946,7 @@ def search_word_cal(word, mlkit_text):
     
     ### result에 10을 곱함
     for i in range(len(result)):
-        result[i] *= 10
+        #result[i] *= 10
         result[i] = round(result[i],2)   # 소수점 둘째자리까지
         
         # 일치율 값이 100을 넘을 경우에 대한 예외처리
@@ -944,4 +955,16 @@ def search_word_cal(word, mlkit_text):
     
     print("!search_word_cal 끝!")
     print(result)
-    return result, df['videoId']
+    
+    # tfidf_keyword 리턴
+    new_keywords = []
+    for wordList in keywords['word']:
+        for word in wordList:
+            new_keywords.append(word)
+        
+    #new_keywords = sum(new_keywords, [])
+    
+    for i in range(len(new_keywords)):
+        print("## new_keywords: ", format(new_keywords))
+        
+    return result, df['videoId'], new_keywords

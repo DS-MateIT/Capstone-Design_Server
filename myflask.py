@@ -12,6 +12,7 @@ app.config['JSON_AS_ASCII'] = False
 
 search_word = ""
 mlkit_text = []
+user_email = ""
 
 @app.route('/')
 def root():
@@ -48,7 +49,7 @@ def srch():
         
  
         ### 연관검색어 크롤링
-        keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        """keywords = keywordtool_crawling.youtube_keyword(post_srch)
         
         print(keywords) #연관검색어 3개 추출 결과  # type : list
         srch_craw1 = keywords[0] # print(srch_craw1)
@@ -57,15 +58,16 @@ def srch():
         
         # 디비로 보내기 
         DBcount_test.DBtable().Insert(post_srch,'1')
-            
+        """
         
         #### youtube_api코드 흐름 제어
 
         #word = "미드소마 리뷰"
-        """youtube_api2.get_searchword(post_srch)  
+        youtube_api2.get_searchword(post_srch)  
         global mlkit_text
         print(mlkit_text)
-        result, video_id = youtube_api2.search_word_cal(post_srch, mlkit_text)
+        
+        result, video_id, keywords = youtube_api2.search_word_cal(post_srch, mlkit_text)
         #result, video_id = youtube_api2.search_word_cal(word)
         #video_id = youtube_api2.search_word_cal(word)
 
@@ -80,10 +82,17 @@ def srch():
         DBcount_test.DBtable().rate_insert(post_srch, video_id[2], result[2])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[3], result[3])
         DBcount_test.DBtable().rate_insert(post_srch, video_id[4], result[4])
-        """
+        
+        
+        global user_email
+        print("##user_email: ", format(user_email))
+        
+        # db에 파이차트 단어(stt) 저장
+        for i in range(len(keywords)):
+            DBcount_test.DBtable().PieChart_insert(user_email, keywords[i])
         
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
+        #DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
         
        
         
@@ -258,6 +267,11 @@ def user():
 @app.route('/user', methods=['GET'])
 def user2():
     email = request.args.get('email')
+    
+    # 전역변수 user_email에 로그인한 사용자 email 저장
+    global user_email
+    user_email = email
+    
     userid = DBcount_test.DBtable().user_id_get(email)
     jsonify(userid)
     return jsonify(userid)
