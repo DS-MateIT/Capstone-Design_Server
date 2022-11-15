@@ -964,7 +964,6 @@ def search_word_cal(word, mlkit_text):
         
     #new_keywords = sum(new_keywords, [])
     
-    for i in range(len(new_keywords)):
-        print("## new_keywords: ", format(new_keywords))
+    print("## new_keywords: ", format(new_keywords))
         
     return result, df['videoId'], new_keywords

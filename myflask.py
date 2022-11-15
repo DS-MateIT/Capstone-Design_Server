@@ -2,7 +2,7 @@
 from flask import Flask, request, Response, jsonify
 import json
 import DBcount_test
-import keywordtool_crawling
+import naver_crawling
 import youtube_api2
 import pymysql
 
@@ -49,21 +49,24 @@ def srch():
         
  
         ### 연관검색어 크롤링
-        """keywords = keywordtool_crawling.youtube_keyword(post_srch)
+        keywords = naver_crawling.naver_keyword(post_srch)
         
         print(keywords) #연관검색어 3개 추출 결과  # type : list
         srch_craw1 = keywords[0] # print(srch_craw1)
         srch_craw2 = keywords[1]
         srch_craw3 = keywords[2]
-        
+        print(srch_craw1)
+        print(srch_craw2)
+        print(srch_craw3)
         # 디비로 보내기 
         DBcount_test.DBtable().Insert(post_srch,'1')
-        """
+        
         
         #### youtube_api코드 흐름 제어
 
         #word = "미드소마 리뷰"
-        youtube_api2.get_searchword(post_srch)  
+        """youtube_api2.get_searchword(post_srch)
+
         global mlkit_text
         print(mlkit_text)
         
@@ -90,11 +93,11 @@ def srch():
         # db에 파이차트 단어(stt) 저장
         for i in range(len(keywords)):
             DBcount_test.DBtable().PieChart_insert(user_email, keywords[i])
-        
+        """
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        #DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
+        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
         
-       
+
         
         #지금 문제점 이름순으로 정렬되는 듯 함 : 내 검색 순 : 돈까스 개강 학식 초코바 / 테이블 출력 순 : 개강 돈까스 초코바 학식
         #자동 인덱스 생성 -> 정렬완료함 
