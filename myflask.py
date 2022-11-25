@@ -46,29 +46,32 @@ def srch():
        
         # 디비 - 검색어 디비로 보내기 
         #DBcount_test.DBtable().Insert2(post_srch)
+        # 왜 Related_keyword()에서 오류남..
+        word_in_db = DBcount_test.DBtable().Relatedword_keyword(post_srch)
+
+        print("word_in_db: {}".format(word_in_db))
         
-        #data = DBcount_test.DBtable().Relatedword_keyword(post_srch)
-
-        # 테이블에 기록이 없으면
-        #if data[1].isnull():
+        # 연관키워드 테이블에 검색어가 없으면
+        if not word_in_db:
             ### 연관검색어 크롤링
-        keywords = naver_crawling.naver_keyword(post_srch)
+            keywords = naver_crawling.naver_keyword(post_srch)
             
-        print(keywords) #연관검색어 3개 추출 결과  # type : list
+            print(keywords) #연관검색어 3개 추출 결과  # type : list
 
-        if len(keywords) == 3 :
-            srch_craw1 = keywords[0] # print(srch_craw1)
-            srch_craw2 = keywords[1]
-            srch_craw3 = keywords[2]
-            print(srch_craw1)
-            print(srch_craw2)
-            print(srch_craw3)
-            # 디비로 보내기 
-            DBcount_test.DBtable().Insert(post_srch,'1')
-            DBcount_test.DBtable().Relatedword_insert(post_srch,srch_craw1,srch_craw2,srch_craw3) # 함수 : Relatedword_insert
-        else: 
-            DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
-    
+            if len(keywords) == 3:
+                srch_craw1 = keywords[0] # print(srch_craw1)
+                srch_craw2 = keywords[1]
+                srch_craw3 = keywords[2]
+                print(srch_craw1)
+                print(srch_craw2)
+                print(srch_craw3)
+                # 디비로 보내기 
+                DBcount_test.DBtable().Insert(post_srch,'1')
+                DBcount_test.DBtable().Relatedword_insert(post_srch,srch_craw1,srch_craw2,srch_craw3) # 함수 : Relatedword_insert
+                
+            else: 
+                DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
+        
         
         #DBcount_test.DBtable().Insert(post_srch,'1')
 
@@ -329,10 +332,10 @@ def get_srch():
     return jsonify(rate)
         
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0')
     #app.run(host='192.168.73.241')
     #app.run(host='0.0.0.0')
-    app.run(host='172.30.1.34') 
+    #app.run(host='172.30.1.34') 
     
     #app.run(host='192.168.11.156') # 미정
 
