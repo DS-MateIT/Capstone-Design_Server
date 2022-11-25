@@ -55,11 +55,8 @@ def srch():
         keywords = naver_crawling.naver_keyword(post_srch)
             
         print(keywords) #연관검색어 3개 추출 결과  # type : list
-<<<<<<< HEAD
+
         if len(keywords) == 3 :
-=======
-        if len(keywords) == 3:
->>>>>>> cf96e3b60a88ff64073a05e93248187e2f196367
             srch_craw1 = keywords[0] # print(srch_craw1)
             srch_craw2 = keywords[1]
             srch_craw3 = keywords[2]
@@ -68,17 +65,10 @@ def srch():
             print(srch_craw3)
             # 디비로 보내기 
             DBcount_test.DBtable().Insert(post_srch,'1')
-<<<<<<< HEAD
             DBcount_test.DBtable().Relatedword_insert(post_srch,srch_craw1,srch_craw2,srch_craw3) # 함수 : Relatedword_insert
         else: 
             DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
-        
-=======
-            DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
-            
-        DBcount_test.DBtable().Relatedword_insert(post_srch, post_srch, post_srch, post_srch)
-
->>>>>>> cf96e3b60a88ff64073a05e93248187e2f196367
+    
         
         #DBcount_test.DBtable().Insert(post_srch,'1')
 
@@ -115,15 +105,11 @@ def srch():
         # db에 파이차트 단어(stt) 저장
         for i in range(len(keywords)):
             DBcount_test.DBtable().PieChart_insert(user_email, keywords[i])
-<<<<<<< HEAD
         """
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
         #DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
-=======
->>>>>>> cf96e3b60a88ff64073a05e93248187e2f196367
-        
-        ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        """
+
+
 
         
         #지금 문제점 이름순으로 정렬되는 듯 함 : 내 검색 순 : 돈까스 개강 학식 초코바 / 테이블 출력 순 : 개강 돈까스 초코바 학식
