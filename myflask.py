@@ -46,7 +46,6 @@ def srch():
        
         # 디비 - 검색어 디비로 보내기 
         #DBcount_test.DBtable().Insert2(post_srch)
-        # 왜 Related_keyword()에서 오류남..
         word_in_db = DBcount_test.DBtable().Relatedword_keyword(post_srch)
 
         print("word_in_db: {}".format(word_in_db))
@@ -71,7 +70,12 @@ def srch():
                 
             else: 
                 DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
-        
+                
+        # 연관키워드 테이블에 검색어가 있으면 db만 업데이트
+        else:
+            DBcount_test.DBtable().Insert(post_srch,'1')
+            DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
+            
         
         #DBcount_test.DBtable().Insert(post_srch,'1')
 
