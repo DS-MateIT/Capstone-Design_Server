@@ -287,7 +287,7 @@ def aws_transcribe():
 
 # 중복 tr인지 체크하고 tr이름이 중복이면 삭제
 def check_job_name(transcribe, job_name):
-    existed_tr = transcribe.list_transcription_jobs(MaxResults=50)
+    existed_tr = transcribe.list_transcription_jobs(MaxResults=100)
     for job in existed_tr['TranscriptionJobSummaries']:
         if job_name == job['TranscriptionJobName']:
             return False
@@ -777,8 +777,13 @@ def search_word_cal(word, mlkit_text):
     desc_count = [int(sum((desc.count(search_word[j])) for j in range(word_count))) for desc in desc_token]
     script_count = [int(sum((script.count(search_word[j])) for j in range(word_count))) for script in script_token]
     
-    print("!!! 썸네일 텍스트 카운트 !!!")
-    print(thumb_count)
+    print("!!! 텍스트 카운트 !!")
+    print("검색어 길이: {}".format(word_count))
+    print("title_count: {}".format(title_count))
+    print("thumb_count:{} ".format(thumb_count))
+    print("desc_count: {}".format(desc_count))
+    print("script_count: {}".format(script_count))
+
 
 
     #title_weight = 30
@@ -936,7 +941,13 @@ def search_word_cal(word, mlkit_text):
             #time = playtime_second_list[i]/10
             #print(time)
             result.append(((((log_title[i]*title_weight[i] + log_script[i]*script_weight[i])*sbert_score[i] + thumb_count[j]*thumb_weight[j] + log_desc[i]*desc_weight[i])) / time) / word_count)
+            print("title_weight은 {}".format(title_weight[i]))
+            print("script_weight은 {}".format(script_weight[i]))
+            print("desc_weight은 {}".format(desc_weight[i]))
+            print("thumb_weight은 {}".format(thumb_weight[i]))
 
+            print("~time~")
+            print(time)
             print("~sbert_score~")
             print(sbert_score[i])
             
