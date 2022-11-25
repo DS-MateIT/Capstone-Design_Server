@@ -360,6 +360,29 @@ class DBtable:
         db.close()
         return ret
     
+    def Relatedword_keyword(self, keyword):
+        ret = []
+            
+        db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
+        curs = db.cursor()
+             
+        sql = "select * from new_schema.new_word where srch_keyword=%s";
+             
+        curs.execute(sql)
+             
+        rows = curs.fetchall()
+
+        curs.execute(sql,keyword)
+        
+        rows = curs.fetchall()
+        
+        for e in rows:
+            temp = {'word_no':e[0],'srch_keyword':e[1],'srch_craw1':e[2], 'srch_craw2':e[3], 'srch_craw3':e[4]}
+            ret.append(temp)    
+        db.commit()
+        db.close()
+        return ret
+    
     
     ## user 
     # user insert
