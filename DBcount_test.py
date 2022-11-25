@@ -333,7 +333,7 @@ class DBtable:
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
             
-        sql = '''insert into new_word (srch_keyword, srch_craw1, srch_craw2, srch_craw3) values(%s,%s,%s,%s)'''
+        sql = '''insert into new_schema.new_word (srch_keyword, srch_craw1, srch_craw2, srch_craw3) values(%s,%s,%s,%s) ON DUPLICATE KEY UPDATE count=count+1'''
         curs.execute(sql,(srch_keyword, srch_craw1, srch_craw2,  srch_craw3))
         db.commit()
         db.close()
@@ -346,7 +346,7 @@ class DBtable:
         db = pymysql.connect(host='database-1.cwwua8swoe2v.ap-northeast-2.rds.amazonaws.com', user='admin', db='new_schema', port=3306, password='ds83418341!', charset='utf8')
         curs = db.cursor()
              
-        sql = "select * from new_schema.new_word order by word_no desc LIMIT 3";
+        sql = "select * from new_schema.new_word ORDER BY count DESC LIMIT 3";
              
         curs.execute(sql)
              

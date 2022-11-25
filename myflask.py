@@ -52,14 +52,18 @@ def srch():
         keywords = naver_crawling.naver_keyword(post_srch)
         
         print(keywords) #연관검색어 3개 추출 결과  # type : list
-        srch_craw1 = keywords[0] # print(srch_craw1)
-        srch_craw2 = keywords[1]
-        srch_craw3 = keywords[2]
-        print(srch_craw1)
-        print(srch_craw2)
-        print(srch_craw3)
-        # 디비로 보내기 
-        DBcount_test.DBtable().Insert(post_srch,'1')
+        if len(keywords) == 3 :
+            srch_craw1 = keywords[0] # print(srch_craw1)
+            srch_craw2 = keywords[1]
+            srch_craw3 = keywords[2]
+            print(srch_craw1)
+            print(srch_craw2)
+            print(srch_craw3)
+            # 디비로 보내기 
+            DBcount_test.DBtable().Insert(post_srch,'1')
+            DBcount_test.DBtable().Relatedword_insert(post_srch,srch_craw1,srch_craw2,srch_craw3) # 함수 : Relatedword_insert
+        else: 
+            DBcount_test.DBtable().Relatedword_insert(post_srch,post_srch,post_srch,post_srch) #함수 : Relatedword_insert
         
         
         #### youtube_api코드 흐름 제어
@@ -95,7 +99,7 @@ def srch():
             DBcount_test.DBtable().PieChart_insert(user_email, keywords[i])
         """
         ### 디비 - word 테이블로 보내기 / workbench new_word테이블로 테스트 확인
-        DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
+        #DBcount_test.DBtable().Relatedword_insert(post_srch, srch_craw1, srch_craw2, srch_craw3)
         
 
         
